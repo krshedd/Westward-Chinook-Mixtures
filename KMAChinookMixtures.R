@@ -40,7 +40,7 @@ date()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 rm(list = ls(all = TRUE))
-setwd("V:/Analysis/4_Westward/Sockeye/KMA Commercial Harvest 2014-2016/Mixtures")
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures")
 source("H:/R Source Scripts/Functions.GCL_KS.R")
 source("C:/Users/krshedd/Documents/R/Functions.GCL.R")
 username <- "krshedd"
@@ -51,15 +51,20 @@ password <- "********"
 #### Pull genotypes from LOKI 2014/2015 ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Get collection SILLYs
-KMA2014 <- c("SALITC14", "SAYAKC14", "SKARLC14", "SUGANC14", "SUYAKC14")  # No Igvak samples, no fishing
+dir.create("Objects")
+
+SPEN2014 <- c("KSPENC14", "KCHIGC14")
+dput(SPEN2014, file = "Objects/SPEN2014.txt")
+
+KMA2014 <- c("KKODC14")
 dput(x = KMA2014, file = "Objects/KMA2014.txt")
-KMA2015 <- c("SALITC15", "SAYAKC15", "SKARLC15", "SUGANC15", "SUYAKC15")  # Good Igvak samples, but very low fishing fishing
+KMA2015 <- c("KALITC15", "KKODC15", "KLARSC15")
 dput(x = KMA2015, file = "Objects/KMA2015.txt")
-# KMA2016 <- c("SALITC16", "SAYAKC16", "SIGVAC16", "SKARLC16", "SUGANC16", "SUYAKC16")  # We'll see
+# KMA2016 <- c("KALITC16", "KKODC16", "KLARSC16")
 # dput(x = KMA2016, file = "Objects/KMA2016.txt")
 
 ## Create Locus Control
-CreateLocusControl.GCL(markersuite = "Sockeye_Kodiak_48SNPs", username = username, password = password)
+CreateLocusControl.GCL(markersuite = "Chinook_Kodiak_2016_48SNPs", username = username, password = password)
 
 ## Save original LocusControl
 loci48 <- LocusControl$locusnames
@@ -71,17 +76,19 @@ dput(x = mito.loci48, file = "Objects/mito.loci48.txt")
 
 #~~~~~~~~~~~~~~~~~~
 ## Pull all data for each silly code and create .gcl objects for each
-# LOKI2R.GCL(sillyvec = c(KMA2014, KMA2015), username = username, password = password)
-sapply(c(KMA2014, KMA2015), function(silly) {LOKI2R.GCL(sillyvec = silly, username = username, password = password)} )  # looping through due to heap space error when getting all sillys at once
+LOKI2R.GCL(sillyvec = c(KMA2014, KMA2015, SPEN2014), username = username, password = password)
+# sapply(c(KMA2014, KMA2015, SPEN2014), function(silly) {LOKI2R.GCL(sillyvec = silly, username = username, password = password)} )  # looping through due to heap space error when getting all sillys at once
 rm(username, password)
 objects(pattern = "\\.gcl")
 
 ## Save unaltered .gcl's as back-up:
-invisible(sapply(c(KMA2014, KMA2015), function(silly) {dput(x = get(paste(silly, ".gcl", sep = '')), file = paste("Raw genotypes/OriginalCollections/" , silly, ".txt", sep = ''))} )); beep(8)
+dir.create("Raw genotypes")
+dir.create("Raw genotypes/OriginalCollections")
+invisible(sapply(c(KMA2014, KMA2015, SPEN2014), function(silly) {dput(x = get(paste(silly, ".gcl", sep = '')), file = paste("Raw genotypes/OriginalCollections/" , silly, ".txt", sep = ''))} )); beep(8)
 
 ## Original sample sizes by SILLY
-collection.size.original <- sapply(c(KMA2014, KMA2015), function(silly) get(paste(silly, ".gcl", sep = ""))$n)
-matrix(data = collection.size.original, ncol = 2, dimnames = list(c("Alitak", "Ayakulik", "Karluk", "Uganik", "Uyak"), 2014:2015))
+collection.size.original <- sapply(c(KMA2014, KMA2015, SPEN2014), function(silly) get(paste(silly, ".gcl", sep = ""))$n)
+# matrix(data = collection.size.original, ncol = 2, dimnames = list(c("Alitak", "Ayakulik", "Karluk", "Uganik", "Uyak"), 2014:2015))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### Clean workspace; dget .gcl objects and Locus Control ####
