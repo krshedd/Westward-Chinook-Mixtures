@@ -111,6 +111,7 @@ loci43[!loci43 %in% loci48]  # Checked Andy's allele frequency plots, and this m
 loci42 <- loci43[loci43 %in% loci48]
 dput(loci42, file = "Objects/loci42.txt")
 
+
 ## Need to create loci 42 and modify .bse file
 
 
@@ -144,25 +145,44 @@ objects(pattern = "\\.gcl")
 
 
 ## Get objects
-baselineobjects <- sapply(list.files(path = "Objects"), function(file) {unlist(strsplit(x = file, split = ".txt"))} )
+baselineobjects <- sapply(list.files(path = "Objects"), function(file) {unlist(strsplit(x = file, split = ".txt"))} , USE.NAMES = FALSE)
 invisible(sapply(baselineobjects, function(file) {assign(x = file, value = dget(file = paste("Objects/", file, ".txt", sep = "")), pos = 1)} ))
 LocusControl <- OriginalLocusControl_loci48; rm(OriginalLocusControl_loci48, OriginalLocusControl_loci52)
 
 
-
-
-
 ## Pop sample sizes
-summary(sapply(PooledNames211, function(silly) {get(paste(silly, ".gcl", sep = ''))$n}))
+pop.n <- sapply(PooledNames211, function(silly) {get(paste(silly, ".gcl", sep = ''))$n})
+sum(pop.n)  # 28,243 fish in baseline
+summary(pop.n)  # smallest pop is 42 fish, largest is 396
+hist(pop.n, col = 8, breaks = seq(0, 400, 10), main = "Histogram of Populations Size", xlab = "Population Size")
 
+
+## Group sample sizes
+group.n <- setNames(object = sapply(seq(groups10), function(group) {sum(sapply(PooledNames211[groupvec10 == group], function(silly) {get(paste(silly, ".gcl", sep = ''))$n})) } ), nm = groups10)
+sapply(PooledNames211[groupvec10 == which(groups10 == "Chignik")], function(silly) {get(paste(silly, ".gcl", sep = ''))$n})  # Only 75 fish in Chignik RG, if we add KCHIG12, we get 141 total for this pop, presuming it pools
+
+## Remove individuals not genotyped for at least 1 locus
 original.n <- sapply(PooledNames211, function(silly) {get(paste(silly, ".gcl", sep = ''))$n})
-RemoveIndMissLoci.GCL(sillyvec = PooledNames211, proportion = 1/42); beep(8)
+RemoveIndMissLoci.GCL(sillyvec = PooledNames211, proportion = 1/42); beep(2)
 postmiss.n <- sapply(PooledNames211, function(silly) {get(paste(silly, ".gcl", sep = ''))$n})
 
 PooledNames211[original.n - postmiss.n > 0]
+str(KANDR02.KANDR03.gcl)
 
 
-## Look for NA, etc.
+## Compare SILLYs between Andy's Lower CI (Templin 2011 + CI) and the 319
+andy.sillys <- readClipboard()
+andy.sillys <- unlist(lapply(andy.sillys, function(silly) {strsplit(x = silly, split = "\\.")}))
+
+nick.sillys <- readClipboard()
+nick.sillys <- unlist(lapply(nick.sillys, function(silly) {strsplit(x = silly, split = "\\.")}))
+
+# Which sillys are in the 319, but not in the Andy's Lower CI baseline
+nick.sillys[!nick.sillys %in% andy.sillys]
+
+
+
+## Allele Frequencies
 KMA211Pops_42loci_AlleleCounts <- FreqPop.GCL(sillyvec = PooledNames211, loci = loci42)
 str(KMA211Pops_42loci_AlleleCounts)
 
@@ -199,21 +219,284 @@ require(devEMF)
 
 new.colors <- colorRampPalette(c("white", "black"))
 
-emf(file = "Likelihood Profiles/KMA211Pops_42loci_Confusion.emf", width = 6.5, height = 6.5, family = "Times")
+# emf(file = "Likelihood Profiles/KMA211Pops_42loci_Confusion.emf", width = 6.5, height = 6.5, family = "Times")
 levelplot(KMA211Pops_42loci_Confusion[[1]], col.regions = new.colors, xlab = "Known Origin", ylab = "Mean Genotype Likelihood", 
           at = seq(0, 1, length.out = 100), scales = list(x = list(rot = 90)))
-dev.off()
+# dev.off()
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # New LeaveOneOutLikeProfile.GCL.R
-source("V:/DATA/R_GEN/JJs GCL/LeaveOneOutlIkeProfile.GCL.R")
-# KMA211Pops_42loci_Likelihood_Profile_NEW <- LeaveOneOutLikeProfile.GCL(popvec = KMA473Pops, loci = loci89, groupvec = KMA473PopsGroupVec15, groupnames = Groups15, groupcomps = NULL, ncores = 6)
+KMA211Pops_42loci_Likelihood_Profile_NEW <- LeaveOneOutLikeProfile.GCL(popvec = PooledNames211, loci = loci42, groupvec = groupvec10, groupnames = groups10, groupcomps = NULL, ncores = 6)
 # dput(x = KMA211Pops_42loci_Likelihood_Profile_NEW, file = "Likelihood Profiles/KMA211Pops_42loci_Likelihood_Profile_NEW.txt")
 KMA211Pops_42loci_Likelihood_Profile_NEW <- dget(file = "Likelihood Profiles/KMA211Pops_42loci_Likelihood_Profile_NEW.txt")
 str(KMA211Pops_42loci_Likelihood_Profile_NEW)
 
-source("V:/DATA/R_GEN/JJs GCL/PlotLikeProfile.GCL.R")
-PlotLikeProfile.GCL(likeprof = KMA211Pops_42loci_Likelihood_Profile_NEW, popvec = KMA473Pops, loci = loci89, groupvec = KMA473PopsGroupVec15, groupnames = Groups15, dir = "Likelihood Profiles")
-likeprof = KMA211Pops_42loci_Likelihood_Profile_NEW; popvec = KMA473Pops; loci = loci89; groupvec = KMA473PopsGroupVec15; groupnames = Groups15; dir = "Likelihood Profiles"
-col = Colors15
+PlotLikeProfile.GCL(likeprof = KMA211Pops_42loci_Likelihood_Profile_NEW, popvec = PooledNames211, loci = loci42, groupvec = groupvec10, groupnames = groups10, dir = "Likelihood Profiles", filename = "KMA211")
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Read in Additional SILLY's to test for Pooling ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+new.sillys.to.pool <- c("KCHIG12", "KAYAK07", "KKARL07", "KKARL12", "KMONA09", "KPILL13", "KBIGCK08", "KPLEN14", "KLAND12", "KSAPSUK12", "KSAPSUK13", "KBLACH07")
+LOKI2R.GCL(sillyvec = new.sillys.to.pool, username = "krshedd", password = password); rm (password)
+length(new.sillys.to.pool)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Data QC/Massage ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+require(xlsx); require(beepr)
+
+new.sillys.to.pool
+
+new.sillys.to.pool_SampleSizes <- matrix(data = NA, nrow = length(new.sillys.to.pool), ncol = 4, 
+                                        dimnames = list(new.sillys.to.pool, c("Genotyped", "Missing", "Duplicate", "Final")))
+
+#### Check loci
+## Get sample size by locus
+Original_new.sillys.to.pool_SampleSizebyLocus <- SampSizeByLocus.GCL(new.sillys.to.pool, loci42)
+min(Original_new.sillys.to.pool_SampleSizebyLocus)  # 30
+sort(apply(Original_new.sillys.to.pool_SampleSizebyLocus,1,min)/apply(Original_new.sillys.to.pool_SampleSizebyLocus,1,max))  # Two under 0.8
+table(apply(Original_new.sillys.to.pool_SampleSizebyLocus,1,min)/apply(Original_new.sillys.to.pool_SampleSizebyLocus,1,max) < 0.8)  # 2 SILLY's with at least one locus fail
+str(Original_new.sillys.to.pool_SampleSizebyLocus)
+
+## Percent by locus
+Original_new.sillys.to.pool_PercentbyLocus <- apply(Original_new.sillys.to.pool_SampleSizebyLocus, 1, function(row) {row / max(row)})
+which(apply(Original_new.sillys.to.pool_PercentbyLocus, 2, min) < 0.8)
+# writeClipboard(as.character(apply(Original_new.sillys.to.pool_PercentbyLocus, 2, min) < 0.8))
+
+require(lattice)
+new.colors <- colorRampPalette(c("black", "white"))
+levelplot(t(Original_new.sillys.to.pool_PercentbyLocus), col.regions = new.colors, xlab = "SILLY", ylab = "Locus", at = seq(0, 1, length.out = 100), scales = list(x = list(rot = 90)), aspect = "fill")  # aspect = "iso" will make squares
+## This looks pretty good, no holes are evident after tweaking ReadLOKIv2.GCL to ReadLOKIv3.GCL with "onlymarkersuitefish" switch turned to TRUE
+
+
+#### Check individuals
+### Initial
+## Get number of individuals per silly before removing missing loci individuals
+Original_new.sillys.to.pool_ColSize <- sapply(paste(new.sillys.to.pool, ".gcl", sep = ''), function(x) get(x)$n)
+new.sillys.to.pool_SampleSizes[, "Genotyped"] <- Original_new.sillys.to.pool_ColSize
+
+
+### Missing
+## Remove individuals with >20% missing data
+new.sillys.to.pool_MissLoci <- RemoveIndMissLoci.GCL(sillyvec = new.sillys.to.pool, proportion = 0.8); beep(8)
+
+## Get number of individuals per silly after removing missing loci individuals
+ColSize_new.sillys.to.pool_PostMissLoci <- sapply(paste(new.sillys.to.pool, ".gcl", sep = ''), function(x) get(x)$n)
+new.sillys.to.pool_SampleSizes[, "Missing"] <- Original_new.sillys.to.pool_ColSize-ColSize_new.sillys.to.pool_PostMissLoci
+
+
+### Duplicate
+## Check within collections for duplicate individuals.
+new.sillys.to.pool_DuplicateCheck95MinProportion <- CheckDupWithinSilly.GCL(sillyvec = new.sillys.to.pool, loci = loci42, quantile = NULL, minproportion = 0.95); beep(8)
+new.sillys.to.pool_DuplicateCheckReportSummary <- sapply(new.sillys.to.pool, function(x) new.sillys.to.pool_DuplicateCheck95MinProportion[[x]]$report)
+
+## Remove duplicate individuals
+# Don't include "SKANA07"  "SKANA10"  "SKANAL13" (inbred/bottlenecked)
+new.sillys.to.pool_RemovedDups <- RemoveDups.GCL(new.sillys.to.pool_DuplicateCheck95MinProportion)
+
+## Get number of individuals per silly after removing duplicate individuals
+ColSize_new.sillys.to.pool_PostDuplicate <- sapply(paste(new.sillys.to.pool, ".gcl", sep = ''), function(x) get(x)$n)
+new.sillys.to.pool_SampleSizes[, "Duplicate"] <- ColSize_new.sillys.to.pool_PostMissLoci-ColSize_new.sillys.to.pool_PostDuplicate
+
+
+### Final
+new.sillys.to.pool_SampleSizes[, "Final"] <- ColSize_new.sillys.to.pool_PostDuplicate
+new.sillys.to.pool_SampleSizes
+
+dir.create("Output")
+write.xlsx(new.sillys.to.pool_SampleSizes, file = "Output/new.sillys.to.pool_SampleSizes.xlsx")
+
+## Save post-QC .gcl's as back-up:
+dir.create(path = "Raw genotypes/PostQCCollections")
+invisible(sapply(new.sillys.to.pool, function(silly) {dput(x = get(paste(silly, ".gcl", sep = '')), file = paste("Raw genotypes/PostQCCollections/" , silly, ".txt", sep = ''))} )); beep(8)
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### New Pooling ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+length(c(new.sillys.to.pool, PooledNames211))
+KMA223Collections_42loci_AlleleCounts <- FreqPop.GCL(sillyvec = c(new.sillys.to.pool, PooledNames211), loci = loci42)
+
+
+# Chignik
+grep(pattern = "KCHIG", x = objects(pattern = "\\.gcl"), value = TRUE)
+ChignikPoolTest <- list(c("KCHIG95.KCHIG06", "KCHIG12"))
+ChignikPoolTestResult <- FishersTest.GCL(freq = KMA223Collections_42loci_AlleleCounts, loci = loci42, tests = ChignikPoolTest)
+ChignikPoolTestResult$OverallResults  # 0.9976
+hist(sort(ChignikPoolTestResult$ResultsByLocus$KCHIG95.KCHIG06.KCHIG12$pval), breaks = seq(0, 1, 0.05), col = 8, main = "Histogram of p-values by locus", xlab = "P-values by locus")
+
+PoolCollections.GCL(collections = unlist(ChignikPoolTest), loci = loci42, IDs = NULL, newname = paste(unlist(ChignikPoolTest), collapse = "."))
+str(KCHIG95.KCHIG06.KCHIG12.gcl)
+
+# Ayakulik
+grep(pattern = "KAYA", x = objects(pattern = "\\.gcl"), value = TRUE)
+AyakulikPoolTest <- list(c("KIAYA93.KAYAK06", "KAYAK07"))
+AyakulikPoolTestResult <- FishersTest.GCL(freq = KMA223Collections_42loci_AlleleCounts, loci = loci42, tests = AyakulikPoolTest)
+AyakulikPoolTestResult$OverallResults  # 0.861
+hist(sort(AyakulikPoolTestResult$ResultsByLocus$KIAYA93.KAYAK06.KAYAK07$pval), breaks = seq(0, 1, 0.05), col = 8, main = "Histogram of p-values by locus", xlab = "P-values by locus")
+
+PoolCollections.GCL(collections = unlist(AyakulikPoolTest), loci = loci42, IDs = NULL, newname = paste(unlist(AyakulikPoolTest), collapse = "."))
+str(KIAYA93.KAYAK06.KAYAK07.gcl)
+
+KIAYA93.KAYAK06.gcl$n; KAYAK07.gcl$n
+str(KAYAK07.gcl)
+KAYAK07.gcl$counts[, 1, 1]
+
+# Karluk
+grep(pattern = "KKARL", x = objects(pattern = "\\.gcl"), value = TRUE)
+KarlukPoolTest <- list(c("KIKAR93.KKARL06", "KKARL07", "KKARL12"))
+KarlukPoolTestResult <- FishersTest.GCL(freq = KMA223Collections_42loci_AlleleCounts, loci = loci42, tests = KarlukPoolTest)
+KarlukPoolTestResult$OverallResults  # 0.6341
+hist(sort(KarlukPoolTestResult$ResultsByLocus$KIKAR93.KKARL06.KKARL07.KKARL12$pval), breaks = seq(0, 1, 0.05), col = 8, main = "Histogram of p-values by locus", xlab = "P-values by locus")
+
+PoolCollections.GCL(collections = unlist(KarlukPoolTest), loci = loci42, IDs = NULL, newname = paste(unlist(KarlukPoolTest), collapse = "."))
+str(KIKAR93.KKARL06.KKARL07.KKARL12.gcl)
+KIKAR93.KKARL06.gcl$n; KKARL07.gcl$n; KKARL12.gcl$n
+
+
+# Monashka + Pillar Creek
+KMONA09.gcl$n; KPILL13.gcl$n
+
+PillarPoolTest <- list(c("KMONA09", "KPILL13"))
+PillarPoolTestResult <- FishersTest.GCL(freq = KMA223Collections_42loci_AlleleCounts, loci = loci42, tests = PillarPoolTest)
+PillarPoolTestResult$OverallResults  # 2e-04
+hist(sort(PillarPoolTestResult$ResultsByLocus$KMONA09.KPILL13$pval), breaks = seq(0, 1, 0.05), col = 8, main = "Histogram of p-values by locus", xlab = "P-values by locus")
+sapply(unlist(PillarPoolTest), function(silly) {get(paste(silly, ".gcl", sep = ''))$n})
+
+PoolCollections.GCL(collections = unlist(PillarPoolTest), loci = loci42, IDs = NULL, newname = paste(unlist(PillarPoolTest), collapse = "."))
+str(KMONA09.KPILL13.gcl)
+
+PillarPoolTest2 <- list(c("KPILL13", "KIKAR93.KKARL06"))
+PillarPoolTest2Result <- FishersTest.GCL(freq = KMA223Collections_42loci_AlleleCounts, loci = loci42, tests = PillarPoolTest2)
+PillarPoolTest2Result$OverallResults  # 0
+
+PillarPoolTest3 <- list(c("KMONA09", "KIKAR93.KKARL06"))
+PillarPoolTest3Result <- FishersTest.GCL(freq = KMA223Collections_42loci_AlleleCounts, loci = loci42, tests = PillarPoolTest3)
+PillarPoolTest3Result$OverallResults  # 0.0136
+
+# Big Creek
+grep(pattern = "KBIGCK", x = objects(pattern = "\\.gcl"), value = TRUE)
+BigCreekPoolTest <- list(c("KBIGCK04", "KBIGCK08"))
+BigCreekPoolTestResult <- FishersTest.GCL(freq = KMA223Collections_42loci_AlleleCounts, loci = loci42, tests = BigCreekPoolTest)
+BigCreekPoolTestResult$OverallResults  # 0.9611
+hist(sort(BigCreekPoolTestResult$ResultsByLocus$KBIGCK04.KBIGCK08$pval), breaks = seq(0, 1, 0.05), col = 8, main = "Histogram of p-values by locus", xlab = "P-values by locus")
+
+PoolCollections.GCL(collections = unlist(BigCreekPoolTest), loci = loci42, IDs = NULL, newname = paste(unlist(BigCreekPoolTest), collapse = "."))
+str(KBIGCK04.KBIGCK08.gcl)
+KBIGCK04.gcl$n; KBIGCK08.gcl$n
+
+# Meshik
+MeshikPoolTest <- list(c("KMESH06", "KPLEN14", "KLAND12"))
+MeshikPoolTestResult <- FishersTest.GCL(freq = KMA223Collections_42loci_AlleleCounts, loci = loci42, tests = MeshikPoolTest)
+MeshikPoolTestResult$OverallResults  # 0.516
+hist(sort(MeshikPoolTestResult$ResultsByLocus$KMESH06.KPLEN14.KLAND12$pval), breaks = seq(0, 1, 0.05), col = 8, main = "Histogram of p-values by locus", xlab = "P-values by locus")
+
+PoolCollections.GCL(collections = unlist(MeshikPoolTest), loci = loci42, IDs = NULL, newname = paste(unlist(MeshikPoolTest), collapse = "."))
+str(KMESH06.KPLEN14.KLAND12.gcl)
+KMESH06.gcl$n; KPLEN14.gcl$n; KLAND12.gcl$n
+
+# Black Hills
+BlackHillsPoolTest <- list(c("KBLACH06", "KBLACH07"))
+BlackHillsPoolTestResult <- FishersTest.GCL(freq = KMA223Collections_42loci_AlleleCounts, loci = loci42, tests = BlackHillsPoolTest)
+BlackHillsPoolTestResult$OverallResults  # 0.9895
+hist(sort(BlackHillsPoolTestResult$ResultsByLocus$KBLACH06.KBLACH07$pval), breaks = seq(0, 1, 0.05), col = 8, main = "Histogram of p-values by locus", xlab = "P-values by locus")
+
+PoolCollections.GCL(collections = unlist(BlackHillsPoolTest), loci = loci42, IDs = NULL, newname = paste(unlist(BlackHillsPoolTest), collapse = "."))
+str(KBLACH06.KBLACH07.gcl)
+KBLACH06.gcl$n; KBLACH07.gcl$n
+
+# Nelson/Sapsuk
+NelsonPoolTest <- list(c("KNELS06", "KSAPSUK12", "KSAPSUK13"))
+NelsonPoolTestResult <- FishersTest.GCL(freq = KMA223Collections_42loci_AlleleCounts, loci = loci42, tests = NelsonPoolTest)
+NelsonPoolTestResult$OverallResults  # 0.0804
+hist(sort(NelsonPoolTestResult$ResultsByLocus$KNELS06.KSAPSUK12.KSAPSUK13$pval), breaks = seq(0, 1, 0.05), col = 8, main = "Histogram of p-values by locus", xlab = "P-values by locus")
+sapply(unlist(NelsonPoolTest), function(silly) {get(paste(silly, ".gcl", sep = ''))$n})
+PoolCollections.GCL(collections = unlist(NelsonPoolTest), loci = loci42, IDs = NULL, newname = paste(unlist(NelsonPoolTest), collapse = "."))
+str(KNELS06.KSAPSUK12.KSAPSUK13.gcl)
+
+
+SapsukPoolTest <- list(c("KSAPSUK12", "KSAPSUK13"))
+SapsukPoolTestResult <- FishersTest.GCL(freq = KMA223Collections_42loci_AlleleCounts, loci = loci42, tests = SapsukPoolTest)
+SapsukPoolTestResult$OverallResults  # 0.9958
+hist(sort(SapsukPoolTestResult$ResultsByLocus$KSAPSUK12.KSAPSUK13$pval), breaks = seq(0, 1, 0.05), col = 8, main = "Histogram of p-values by locus", xlab = "P-values by locus")
+sapply(unlist(SapsukPoolTest), function(silly) {get(paste(silly, ".gcl", sep = ''))$n})
+
+
+PoolCollections.GCL(collections = unlist(SapsukPoolTest), loci = loci42, IDs = NULL, newname = paste(unlist(SapsukPoolTest), collapse = "."))
+str(KSAPSUK12.KSAPSUK13.gcl)
+
+NelsonPoolTest2 <- list(c("KNELS06", "KSAPSUK12.KSAPSUK13"))
+NelsonPoolTest2_42loci_AlleleCounts <- FreqPop.GCL(sillyvec = unlist(NelsonPoolTest2), loci = loci42)
+NelsonPoolTest2Result <- FishersTest.GCL(freq = NelsonPoolTest2_42loci_AlleleCounts, loci = loci42, tests = NelsonPoolTest2)
+NelsonPoolTest2Result$OverallResults  # 0.0902
+hist(sort(NelsonPoolTest2Result$ResultsByLocus$KNELS06.KSAPSUK12.KSAPSUK13$pval), breaks = seq(0, 1, 0.05), col = 8, main = "Histogram of p-values by locus", xlab = "P-values by locus")
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### HWE for New Pooling ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# FreqFis to verify pooling
+pooling.collections <- c("KCHIG95.KCHIG06", "KCHIG12", "KIAYA93.KAYAK06", "KAYAK07", "KIKAR93.KKARL06", "KKARL07", "KKARL12", "KMONA09", "KPILL13", "KBIGCK04", "KBIGCK08", "KMESH06", "KPLEN14", "KLAND12", "KBLACH06", "KBLACH07", "KNELS06", "KSAPSUK12", "KSAPSUK13")
+
+PoolingFreqFis <- FreqFisPlot4SNPs.GCL(sillyvec = pooling.collections, loci = loci42, groupvec = c(1, 1, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6, 6, 6, 7, 7, 8, 8, 8), groupcol = )
+
+# Histogram of Fis values by silly
+sapply(rownames(PoolingFreqFis$Fis), function(silly) {hist(PoolingFreqFis$Fis[silly, ], breaks = seq(-1, 1, 0.05), col = 8, xlab = "Fis", main = silly)})
+
+# Ho Fis Fst Table
+PoolingHoFisTable <- HoFisFstTable.GCL(sillyvec = pooling.collections, loci = loci42, dir = "Output")
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# HWE in pooling collections
+dir.create("Genepop")
+length(pooling.collections)
+mito.loci <- which(LocusControl$ploidy[loci42] == 1)
+gcl2Genepop.GCL(sillyvec = pooling.collections, loci = loci42[-mito.loci], path = "Genepop/KMA19PoolingCollections_41nuclearloci.txt", VialNums = TRUE)
+
+HWE.pooling.collections <- ReadGenepopHWE.GCL(file = "Genepop/KMA19PoolingCollections_41nuclearloci.txt.P")
+str(HWE.pooling.collections)
+HWE.pooling.collections$SummaryPValues["Overall Loci", ]  # KMONA09 and KPILL13 are marginal for HWE, overall Fis is -0.04 & -0.03, respectively (.DIV)
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# HWE in pooled populations
+pooled.pops <- c("KCHIG95.KCHIG06.KCHIG12", "KIAYA93.KAYAK06.KAYAK07", "KIKAR93.KKARL06.KKARL07.KKARL12", "KMONA09.KPILL13", "KBIGCK04.KBIGCK08", "KMESH06.KPLEN14.KLAND12", "KBLACH06.KBLACH07", "KNELS06.KSAPSUK12.KSAPSUK13", "KSAPSUK12.KSAPSUK13")
+length(pooled.pops)
+gcl2Genepop.GCL(sillyvec = pooled.pops, loci = loci42[-mito.loci], path = "Genepop/KMA9PooledPops_41nuclearloci.txt", VialNums = TRUE)
+
+HWE.pooled.pops <- ReadGenepopHWE.GCL(file = "Genepop/KMA9PooledPops_41nuclearloci.txt.P")
+str(HWE.pooled.pops)
+HWE.pooled.pops$SummaryPValues["Overall Loci", ]  # KMONA09.KPILL13 is marginal for HWE, overall Fis is -0.03
+HWE.pooled.pops$DataByPop
+unique(HWE.pooled.pops$DataByPop$Pop)[4]
+
+
+# Fis for each and HWE P-value
+PillarFisHWETab <- cbind(sapply(c("KMONA09", "KPILL13"), function(silly) {PoolingFreqFis$Fis[silly, loci42[-mito.loci]]}),
+subset(x = HWE.pooled.pops$DataByPop, subset = Pop == unique(HWE.pooled.pops$DataByPop$Pop)[4], select = "WC Fis"),
+subset(x = HWE.pooled.pops$DataByPop, subset = Pop == unique(HWE.pooled.pops$DataByPop$Pop)[4], select = "PValue"))
+
+write.table(x = PillarFisHWETab, file = "Output/PillarFisHWETable.txt")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Final Population List ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### MDS ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Likelihood Profiles ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
