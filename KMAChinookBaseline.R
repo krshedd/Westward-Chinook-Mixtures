@@ -443,8 +443,9 @@ hist(sort(NelsonPoolTest2Result$ResultsByLocus$KNELS06.KSAPSUK12.KSAPSUK13$pval)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # FreqFis to verify pooling
 pooling.collections <- c("KCHIG95.KCHIG06", "KCHIG12", "KIAYA93.KAYAK06", "KAYAK07", "KIKAR93.KKARL06", "KKARL07", "KKARL12", "KMONA09", "KPILL13", "KBIGCK04", "KBIGCK08", "KMESH06", "KPLEN14", "KLAND12", "KBLACH06", "KBLACH07", "KNELS06", "KSAPSUK12", "KSAPSUK13")
+length(pooling.collections)
 
-PoolingFreqFis <- FreqFisPlot4SNPs.GCL(sillyvec = pooling.collections, loci = loci42, groupvec = c(1, 1, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6, 6, 6, 7, 7, 8, 8, 8), groupcol = )
+PoolingFreqFis <- FreqFisPlot4SNPs.GCL(sillyvec = pooling.collections, loci = loci42, groupvec = c(1, 1, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6, 6, 6, 7, 7, 8, 8, 8), file = "KMA19PoolingCollections_42loci_FreqFisPlot.pdf")
 
 # Histogram of Fis values by silly
 sapply(rownames(PoolingFreqFis$Fis), function(silly) {hist(PoolingFreqFis$Fis[silly, ], breaks = seq(-1, 1, 0.05), col = 8, xlab = "Fis", main = silly)})
@@ -489,14 +490,254 @@ write.table(x = PillarFisHWETab, file = "Output/PillarFisHWETable.txt")
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### Final Population List ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Decision is to keep things that pool, but not add any new populations
+
+PooledNames211
+pooled.pops
+
+poooling.mgsub <- c(Chignik = ChignikPoolTest,
+     Ayakulik = AyakulikPoolTest,
+     Karluk = KarlukPoolTest,
+     BigCreek = BigCreekPoolTest,
+     Meshik = MeshikPoolTest,
+     BlackHills = BlackHillsPoolTest,
+     Nelson = NelsonPoolTest)
+
+pooling.mgsub.pattern <- sapply(poooling.mgsub, function(pop) {pop[1]})
+pooling.mgsub.replacement <- sapply(poooling.mgsub, function(pop) {paste(pop, collapse = ".")})
+
+require(qdap)
+KMA211Pops <- mgsub(pattern = pooling.mgsub.pattern, replacement = pooling.mgsub.replacement, text.var = PooledNames211)
+dput(x = KMA211Pops, file = "Objects/KMA211Pops.txt")
+
+KMA211Pops[!KMA211Pops %in% PooledNames211]
+PooledNames211[!PooledNames211 %in% KMA211Pops]
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Data QC ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Check loci
+## Get sample size by locus
+KMA211Pops_SampleSizebyLocus <- SampSizeByLocus.GCL(KMA211Pops, loci42)
+min(KMA211Pops_SampleSizebyLocus)  # 8
+sort(apply(KMA211Pops_SampleSizebyLocus,1,min)/apply(KMA211Pops_SampleSizebyLocus,1,max))  # Several under 0.8
+table(apply(KMA211Pops_SampleSizebyLocus,1,min)/apply(KMA211Pops_SampleSizebyLocus,1,max) < 0.8)  # 36 SILLY's with at least one locus fail
+str(KMA211Pops_SampleSizebyLocus)
+
+## Percent by locus
+KMA211Pops_PercentbyLocus <- apply(KMA211Pops_SampleSizebyLocus, 1, function(row) {row / max(row)})
+which(apply(KMA211Pops_PercentbyLocus, 2, min) < 0.8)
+str(KMA211Pops_PercentbyLocus)
+# writeClipboard(as.character(apply(KMA211Pops_PercentbyLocus, 2, min) < 0.8))
+
+require(lattice)
+new.colors <- colorRampPalette(c("black", "white"))
+levelplot(t(KMA211Pops_PercentbyLocus), col.regions = new.colors, xlab = "SILLY", ylab = "Locus", at = seq(0, 1, length.out = 100), scales = list(x = list(rot = 90)), aspect = "fill")  # aspect = "iso" will make squares
+## This looks pretty good, no holes are evident after tweaking ReadLOKIv2.GCL to ReadLOKIv3.GCL with "onlymarkersuitefish" switch turned to TRUE
+
+KMA211Pops_SampleSizebyLocus[8, ]
+str(KANDR02.KANDR03.gcl)
+
+
+## Look for weird scores
+table(KANDR02.KANDR03.gcl$scores)
+unique(names(table(KANDR02.KANDR03.gcl$scores)))
+
+# What are the alleles present in each silly
+KMA211Pops.scores <- sapply(KMA211Pops, function(silly) {
+  names(table(get(paste(silly, ".gcl", sep = ''))$scores))
+})
+
+# Do any silly's have weird alleles?
+table(sapply(KMA211Pops.scores, length))
+
+KMA211Pops.scores[which(sapply(KMA211Pops.scores, length) > 6)]
+
+
+
+for(silly in names(which(sapply(KMA211Pops.scores, length) > 6))) {
+  my.gcl <- get(paste(silly, ".gcl", sep = ''))
+  
+  counts=my.gcl$counts
+  scores=my.gcl$scores
+  n=my.gcl$n
+  attributes=my.gcl$attributes
+  
+  scores <- gsub(pattern = "Unk", replacement = "0", scores)
+
+  assign(paste0(silly,".gcl"),list(counts=counts,scores=scores,n=n,attributes=attributes),pos=1)
+}
+
+unique(names(table(KANDR02.KANDR03.gcl$scores)))
+
+
+## Save final .gcl's as back-up:
+dir.create("Raw genotypes/PostQCPooledPopsClean")
+invisible(sapply(KMA211Pops, function(silly) {dput(x = get(paste(silly, ".gcl", sep = '')), file = paste("Raw genotypes/PostQCPooledPopsClean/" , silly, ".txt", sep = ''))} )); beep(8)
+
+
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### MDS ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Dump a GENEPOP file for genind
+require(adegenet)
+gcl2Genepop.GCL(sillyvec = KMA211Pops, loci = loci42, path = "Genepop/KMA211Pops_42loci.gen", VialNums = TRUE)
+gcl2Genepop.GCL(sillyvec = KMA211Pops, loci = loci42[-mito.loci], path = "Genepop/KMA211Pops_41nuclearloci.gen", VialNums = TRUE)
+genind <- read.genepop(file = "Genepop/KMA211Pops_41nuclearloci.gen")
+
+genpop <- genind2genpop(genind)
+
+AdegenetNei211Pop41nuclearloci <- dist.genpop(genpop, method = 1, diag = TRUE, upper = TRUE)
+dir.create("Trees")
+dput(x = AdegenetNei211Pop41nuclearloci, file = "Trees/AdegenetNei211Pop41nuclearloci.txt")
+str(AdegenetNei211Pop41nuclearloci)
+
+require(ape)
+Nei211NJtree <- nj(AdegenetNei211Pop41nuclearloci)
+str(Nei211NJtree)
+
+par(mar = c(5, 5, 5, 5), oma = c(3, 0, 0, 0))
+plot.phylo(x = Nei211NJtree, cex = 0.5, no.margin = TRUE, type = "p")
+axisPhylo(1, las = 1, backward = FALSE)
+
+Nei211NJtree$tip.label <- popnames211
+par(mar = c(5, 5, 5, 5), oma = c(3, 0, 0, 0))
+plot.phylo(x = Nei211NJtree, cex = 0.3, no.margin = TRUE, type = "p")
+axisPhylo(1, las = 1, backward = FALSE)
+
+write.tree(Nei211NJtree, "Trees/NJofNei211Popstree.nex", tree.names = popnames211)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## MDS
+library('rgl')
+
+MDS <- cmdscale(as.matrix(AdegenetNei211Pop41nuclearloci), k = 3)  # Did in base R as it kept crashing in RStudio...dunno why.
+dput(x = MDS, file = "Objects/MDSAdegenetNei211Pop41nuclearloci.txt")
+MDS <- dget(file = "Objects/MDSAdegenetNei211Pop41nuclearloci.txt")
+
+x <- as.vector(MDS[, 1])   
+y <- as.vector(MDS[, 2])
+z <- as.vector(MDS[, 3])
+
+par(family = "serif")
+plot3d(x, y, z + abs(range(z)[1]), xlab = '', ylab = '', zlab = '', aspect = FALSE, col = colors10[groupvec10], size = 0.5, type = 's', axes = TRUE, box = TRUE, top = TRUE, cex = 1)
+box3d()
+# plot3d(x, y, z + abs(range(z)[1]), aspect = FALSE, col = "black", size = 0.5, type = 'h', box = TRUE, axes = FALSE, top = FALSE, add = TRUE)  # adds pins to spheres
+texts3d(x, y, z + abs(range(z)[1]), adj = c(-0.2, 0), text = seq(KMA211Pops), font = 2, cex = 0.8, add = TRUE, top = TRUE, axes = FALSE)  # adds numbers to points(adj moves the numbers around the points)
+
+dir.create("MDS")
+rgl.snapshot("MDS/MDSAdegenetNei211Pop41nuclearloci.png", fmt="png", top=TRUE )
+
+
+# Plot individually
+par(mar = c(4, 4, 4, 4))
+plot(x, col = colors10[groupvec10], pch = 16)
+plot(y, col = colors10[groupvec10], pch = 16)
+popnames211[which.min(y)]; popnames211[which.max(y)]
+plot(z, col = colors10[groupvec10], pch = 16)
+popnames211[which.min(z)]; popnames211[which.max(z)]
+
+cbind(groups10, colors10)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Freq Fis Plots Post Pooling New Collections ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+dir.create("FreqFisPlots")
+KMA211PopsPostPool_42loci_FreqFis <- FreqFisPlot4SNPs.GCL(sillyvec = KMA211Pops, loci = loci42, groupvec = groupvec10, groupcol = colors10, file = "FreqFisPlots/KMA211PopsPostPool_42loci_FreqFisPlot.pdf", dot.cex = 0.8)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#### Likelihood Profiles ####
+#### Final Markerset ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+## Ots_IL-1RA and Ots_SERPC1-209 both have rampant HWE issues (- and + Fis respectively)
+## Templin et al. 2011 kept both markers in (Bonferroni corrected had minor issues with IL-1RA)
+## Andy keeps both, Chris and Tyler decided to keep both, so that Andy and I have the "same baseline"
+
+loci42
+LocusControl$Publishedlocusnames[loci42]
+
+loci42.published <- apply(cbind(LocusControl$Publishedlocusnames[loci42], loci42), 1, function(row) {
+  ifelse(is.na(row[1]), row[2], row[1])
+})
+
+loci48.published <- apply(cbind(LocusControl$Publishedlocusnames[loci48], loci48), 1, function(row) {
+  ifelse(is.na(row[1]), row[2], row[1])
+})
+
+x <- readClipboard()
+x <- strsplit(x = x, split = " ")
+templin.loci <- sapply(x, function(row) {row[1]})
+dput(x = templin.loci, file = "Objects/templin.loci.txt")
+
+# Which markers were in Templin et al. 2011, but not in loci42?
+templin.loci[!templin.loci %in% loci42.published]
+
+templin.loci[!templin.loci %in% loci48.published]
+
+# WTF happened to Ots_ZNF330-181 (aka Ots_NRP)???
+FreqPop.GCL(sillyvec = KMA211Pops, loci = "Ots_NRP")
+FreqPop.GCL(sillyvec = PooledNames211, loci = "Ots_NRP")
+
+Ots_NRP.PooledNames211 <- sapply(PooledNames211, function(silly) {
+  my.gcl <- get(paste(silly, ".gcl", sep = ''))
+  "Ots_NRP" %in% dimnames(my.gcl$scores)[[2]]
+})
+table(Ots_NRP.PooledNames211)  # Missing in 1 population!!!
+
+PooledNames211[!Ots_NRP.PooledNames211]  # Missing from the Kenai
+
+KKENA04.KKENAI03.KKENM06.gcl$n
+
+# This marker does exist for these collections in OceanAK, dunno why Andy dropped it?
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Likelihood Profiles 42 Loci Post Pooling New Collections ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+KMA211PopsPostPool_42loci_Likelihood_Profile <- LeaveOneOutDist.GCL(sillyvec = KMA211Pops, loci = loci42, groupvec = groupvec10)
+dput(x = KMA211PopsPostPool_42loci_Likelihood_Profile, file = "Likelihood Profiles/KMA211PopsPostPool_42loci_Likelihood_Profile.txt")
+
+KMA211PopsPostPool_42loci_Likelihood_Profile <- dget(file = "Likelihood Profiles/KMA211PopsPostPool_42loci_Likelihood_Profile.txt")
+str(KMA211PopsPostPool_42loci_Likelihood_Profile[[1]], max.level = 1)
+
+# Individual baseline genetic likelihood for RGs assigned (i.e. what is the genotype likelihood of all baseline individuals to RG X)
+invisible(lapply(KMA211PopsPostPool_42loci_Likelihood_Profile[[1]], function(lst) {boxplot(lst, pch=16, cex = 0.5, notch=TRUE, col=colors10[sort(groupvec10)], ylab="Probability", xlim = c(0, length(KMA211Pops) * 1.17), bty = "n", axes = FALSE, xlab = "Population", cex.lab = 1.5)
+  axis(side = 2, cex.axis = 1.5)
+  axis(side = 1, cex.axis = 1.5, at = c(seq(from = 0, to = length(KMA211Pops), by = 50), length(KMA211Pops)))
+  
+  # segments(x0 = c(0, cumsum(table(groupvec10))[-max(groupvec10)]) + 0.5, y0 = 0, x1 = c(0, cumsum(table(groupvec10))[-max(groupvec10)]) + 0.5, y1 = 1, col = colors10, lwd = 4)
+  
+  legend(x = length(KMA211Pops), y = 1, legend = groups10, fill = colors10, bty = "n", cex = 1.3)} ))  # Regional Flat Prior
+# Confusion Matrices
+KMA211PopsPostPool_42loci_Confusion <- ConfusionMatrices.GCL(LeaveOneOutDist = KMA211PopsPostPool_42loci_Likelihood_Profile, groupnames = groups10, groupvec = groupvec10, sillyvec = KMA211Pops)  # Regional Flat Prior
+dput(x = KMA211PopsPostPool_42loci_Confusion, file = "Objects/KMA211PopsPostPool_42loci_Confusion.txt")
+KMA211PopsPostPool_42loci_Confusion <- dget(file = "Objects/KMA211PopsPostPool_42loci_Confusion.txt")
+
+diag(KMA211PopsPostPool_42loci_Confusion[[1]])
+# dimnames(KMA211PopsPostPool_42loci_Confusion[[1]]) <- list(groups, PCGroups15)
+
+require(lattice)
+require(devEMF)
+
+new.colors <- colorRampPalette(c("white", "black"))
+
+# emf(file = "Likelihood Profiles/KMA211PopsPostPool_42loci_Confusion.emf", width = 6.5, height = 6.5, family = "Times")
+levelplot(KMA211PopsPostPool_42loci_Confusion[[1]], col.regions = new.colors, xlab = "Known Origin", ylab = "Mean Genotype Likelihood", 
+          at = seq(0, 1, length.out = 100), scales = list(x = list(rot = 90)))
+# dev.off()
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# New LeaveOneOutLikeProfile.GCL.R
+KMA211PopsPostPool_42loci_Likelihood_Profile_NEW <- LeaveOneOutLikeProfile.GCL(popvec = KMA211Pops, loci = loci42, groupvec = groupvec10, groupnames = groups10, groupcomps = NULL, ncores = 6)
+# dput(x = KMA211PopsPostPool_42loci_Likelihood_Profile_NEW, file = "Likelihood Profiles/KMA211PopsPostPool_42loci_Likelihood_Profile_NEW.txt")
+KMA211PopsPostPool_42loci_Likelihood_Profile_NEW <- dget(file = "Likelihood Profiles/KMA211PopsPostPool_42loci_Likelihood_Profile_NEW.txt")
+str(KMA211PopsPostPool_42loci_Likelihood_Profile_NEW)
+
+PlotLikeProfile.GCL(likeprof = KMA211PopsPostPool_42loci_Likelihood_Profile_NEW, popvec = KMA211Pops, loci = loci42, groupvec = groupvec10, groupnames = groups10, dir = "Likelihood Profiles", filename = "KMA211")
+
 
