@@ -807,3 +807,9 @@ PlotLikeProfile.GCL(likeprof = KMA211PopsPostPool_42loci_Likelihood_Profile_NEW,
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### Pairwise Fst Tree ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Create Baseline .bse ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+CreateBaseline.GCL(sillyvec = KMA211Pops, loci = loci42, dir = "BAYES/Baseline", basename = "KMA211Pops42Loci", type = "BAYES")
