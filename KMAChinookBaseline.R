@@ -632,7 +632,7 @@ unique(names(table(KANDR02.KANDR03.gcl$scores)))
 # What are the alleles present in each silly
 KMA211Pops.scores <- sapply(KMA211Pops, function(silly) {
   names(table(get(paste(silly, ".gcl", sep = ''))$scores))
-})
+}, simplify = FALSE)
 
 # Do any silly's have weird alleles?
 table(sapply(KMA211Pops.scores, length))
@@ -693,7 +693,7 @@ dir.create("FreqFisPlots")
 KMA211PopsPostPool_42loci_FreqFis <- FreqFisPlot4SNPs.GCL(sillyvec = KMA211Pops, loci = loci42, groupvec = groupvec10, groupcol = colors10, file = "FreqFisPlots/KMA211PopsPostPool_42loci_FreqFisPlot.pdf", dot.cex = 0.8)
 str(KMA211PopsPostPool_42loci_FreqFis)
 dput(x = KMA211PopsPostPool_42loci_FreqFis, file = "FreqFisPlots/KMA211PopsPostPool_42loci_FreqFis.txt")
-
+KMA211PopsPostPool_42loci_FreqFis <- dget(file = "FreqFisPlots/KMA211PopsPostPool_42loci_FreqFis.txt")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### MDS ####
@@ -807,9 +807,104 @@ PlotLikeProfile.GCL(likeprof = KMA211PopsPostPool_42loci_Likelihood_Profile_NEW,
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### Pairwise Fst Tree ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Explored updating the PairwiseFstTree.GCL function
+# First thought was to replace looping through each locus using 'varcomp' 
+# with 'varcomp.glob' for diploid and haploid loci separately, however 
+# 'varcomp.glob' is just a wrapper for 'varcomp' with a 'for' loop, so it wasn't
+# any faster. Explored some other options for vectorizing, but they can not
+# accept markersets of mixed ploidy
+
+
+
+# Create fstat .dat file for hierfstat
+
+sillyvec <- KMA211Pops
+loci <- loci42
+dir <- "Trees"
+nboots <- 1000
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+fstatdir=paste(dir,"\\fstatfile.dat",sep="")
+
+while(!require("ape")){intall.packages("ape")}
+
+while(!require("hierfstat")){intall.packages("hierfstat")}
+
+nsillys=length(sillyvec)
+
+maxsillychar=nchar(nsillys)+1
+
+nloci=length(loci)
+
+ploidy=LocusControl$ploidy[loci]
+
+nalleles=LocusControl$nalleles[loci]
+
+maxchar=nchar(nalleles)+1
+names(maxchar)=loci
+
+alleles=LocusControl$alleles[loci]
+
+my.gcl=lapply(sillyvec,function(silly){get(paste(silly,".gcl",sep=""),pos=1)})
+names(my.gcl)=sillyvec
+
+n=sapply(sillyvec,function(silly){my.gcl[[silly]]$n})
+names(n)=sillyvec
+
+scores=lapply(sillyvec,function(silly){scores0 <- my.gcl[[silly]]$scores[,loci,] ; scores0[scores0 %in% c("Unk", "XXX", "0")] <- NA ; scores0})
+names(scores)=sillyvec
+
+counts=lapply(sillyvec,function(silly){
+  sapply(1:n[silly],function(i){
+    paste(c(match(silly,sillyvec),sapply(loci,function(locus){
+      ifelse(is.na(scores[[silly]][i,locus,1]),paste(rep(0,ploidy[locus]*maxchar[locus]),collapse=""),paste(sapply(1:ploidy[locus],function(allele){
+        paste(c(rep(0,maxchar[locus]-nchar(match(scores[[silly]][i,locus,allele],alleles[[locus]]))),match(scores[[silly]][i,locus,allele],alleles[[locus]])),collapse="")
+      }),collapse=""))
+    })),collapse=" ")
+  })
+})   
+names(counts)=sillyvec
+
+fstat=paste(nsillys,nloci,max(nalleles),max(maxchar),sep=" ")
+
+fstat=rbind(fstat,cbind(loci))
+
+fstat=rbind(fstat,cbind(as.vector(unlist(counts))))
+
+write.table(fstat,fstatdir,row.names=FALSE,col.names=FALSE,quote=FALSE)
+
+dat=read.fstat.data(fstatdir)
+
+## varcomp.glob is just a for loop of varcomp, so it takes just as long as Jim's for loop
+
+## Try a pairwise Fst function specifically
+# The catch is that it can't do haploid at the same time
+
+data(gtrunchier)
+str(gtrunchier)
+pairwise.WCfst(gtrunchier[,-2],diploid=TRUE)
+
+# Does our one haploid marker (mito) even matter?
+# Plot allele frequency
+mito.counts <- FreqPop.GCL(sillyvec = KMA211Pops, loci = loci[mito.loci])
+plot(mito.counts[, 1,"Allele 1"] / rowSums(mito.counts[,1,]), type = "b")
+
+
+## Attempting pairwise Fst tree on only diploid markers with pairwise.WCfst
+ptm <- proc.time()
+KMA211Pops41nuclearloci_fst.mat <- pairwise.WCfst(dat = dat[, -(mito.loci+1)], diploid = TRUE)
+proc.time() - ptm  # 10149.05 sec = 169.15 min = 2.82 hours
+
+dput(x = KMA211Pops41nuclearloci_fst.mat, file = "Trees/KMA211Pops41nuclearloci_fst.mat.txt")
+str(KMA211Pops41nuclearloci_fst.mat)
+KMA211Pops41nuclearloci_fst.mat[upper.tri(KMA211Pops41nuclearloci_fst.mat)]
+
+## Will compare this pairwise Fst matrix with "standard" function
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### Create Baseline .bse ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-CreateBaseline.GCL(sillyvec = KMA211Pops, loci = loci42, dir = "BAYES/Baseline", basename = "KMA211Pops42Loci", type = "BAYES")
+KMA211Pops42Loci.baseline <- CreateBaseline.GCL(sillyvec = KMA211Pops, loci = loci42, dir = "BAYES/Baseline", basename = "KMA211Pops42Loci", type = "BAYES")
+dput(x = KMA211Pops42Loci.baseline, file = "Objects/KMA211Pops42Loci.baseline.txt")
