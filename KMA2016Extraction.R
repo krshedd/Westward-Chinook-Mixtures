@@ -1,5 +1,6 @@
 rm(list = ls())
 setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Extraction")
+load(file = "KMA2016Extraction.RData")
 
 # Had to remove an "X" in the "XTR" column that had "NO VIALS"
 
@@ -19,7 +20,8 @@ sum(king2016$XTR == "X ", na.rm = TRUE)
 king2016$XTR <- gsub(pattern = "X ", replacement = "X", x = king2016$XTR)
 
 vials2besplit <- king2016$Vial.Number[which(king2016$XTR == "X")]
-vials2besplit
+vials2besplit <- king2016$Vial.Number[1:443]
+vials2besplit <- vials2besplit[!vials2besplit %in% "NO VIALS"]
 
 
 strsplit(x = grep(pattern = ", ", x = vials2besplit, value = TRUE), split = ", ")
@@ -121,3 +123,84 @@ write.xlsx(x = king2016xtrperfish.df.final, file = "WWChinookSampleSelection2016
 write.xlsx(x = sort(vials2extract[!vials2extract %in% vials2remove]), file = "WWChinookSampleSelection2016 FINAL_KS.xls", sheetName = "KKMAC16 ForLAB", row.names = FALSE, append = TRUE)
 
 save.image(file = "KMA2016Extraction.RData")
+
+
+
+
+
+
+
+
+
+
+require(xlsx)
+king2016 <- read.xlsx(file = "WWChinookSampleSelection2016 FINAL_KS.xls", sheetName = "Chinook", startRow = 3, stringsAsFactors = FALSE)
+str(king2016)
+
+which(king2016$Vial.Number == "NO VIALS")
+king2016 <- king2016[c(1:389, 391:443), seq(which(dimnames(king2016)[[2]] == "comments"))]
+str(king2016)
+
+
+vials2besplit <- king2016$Vial.Number
+
+
+
+strsplit(x = grep(pattern = ", ", x = vials2besplit, value = TRUE), split = ", ")
+
+
+# Get individual vial numbers by splitting characters
+test <- sapply(vials2besplit, function(vial) {
+  if("," %in% unlist(strsplit(x = vial, split = ""))){
+    vial <- unlist(strsplit(x = vial, split = ", "))
+  }
+  if("-" %in% unlist(strsplit(x = vial, split = ""))) {
+    vials <- sapply(vial, function(Vial) {as.numeric(unlist(strsplit(x = Vial, split = "-")))}, simplify = FALSE)
+    lapply(vials, function(Vials) {seq(from = min(Vials), to = max(Vials), by = 1)})
+  } else {
+    as.numeric(vial)
+  }
+} )
+
+str(test, max.level = 0)
+test[1:10]
+str(test[181])
+
+
+
+# Get number of individuals per row
+sampsize <- lapply(test, function(row) {length(unlist(row))})
+str(sampsize, max.level = 0)
+head(sampsize)
+
+# check weird one which was a collection of two different vial ranges
+test[181]
+sampsize[181]
+
+# Number of fish to extract for 2015 mixtures
+length(unlist(x = test, recursive = TRUE, use.names = FALSE))
+sum(unlist(sampsize))
+
+
+# Write tables
+king2016$SampleSize <- unlist(sampsize, use.names = FALSE)
+str(king2016)
+
+
+# Create data.frame with one row per fish
+king2016perfish <- apply(X = king2016, 1, function(row) {matrix(data = rep(row, times = row["SampleSize"]), ncol = 18, byrow = TRUE)} )
+king2016perfish.mat <- Reduce(f = rbind, x = king2016perfish)
+
+str(king2016perfish.mat)
+king2016perfish.df <- data.frame(king2016perfish.mat, stringsAsFactors = FALSE)
+head(king2016perfish.df)
+dimnames(king2016perfish.df)[[2]] <- dimnames(king2016)[[2]]
+str(king2016perfish.df)
+
+king2016perfish.df$VialNumber <- unlist(test, recursive = TRUE, use.names = FALSE)
+
+king2016perfish.df.final <- king2016perfish.df[, c("VialNumber", "Area", "single.catch.date", "Catch.Date", "Card", "Strata", "Sampling.Port")]
+str(king2016perfish.df.final)
+
+
+write.xlsx(x = king2016perfish.df.final, file = "WWChinookSampleSelection2016 FINAL_KS.xls", sheetName = "AllVialsNewDataOneFishPerRow", row.names = FALSE, append = TRUE)
