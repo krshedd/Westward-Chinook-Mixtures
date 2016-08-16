@@ -808,12 +808,17 @@ PlotLikeProfile.GCL(likeprof = KMA211PopsPostPool_42loci_Likelihood_Profile_NEW,
 #### Pairwise Fst Tree ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Explored updating the PairwiseFstTree.GCL function
+
 # First thought was to replace looping through each locus using 'varcomp' 
 # with 'varcomp.glob' for diploid and haploid loci separately, however 
 # 'varcomp.glob' is just a wrapper for 'varcomp' with a 'for' loop, so it wasn't
-# any faster. Explored some other options for vectorizing, but they can not
-# accept markersets of mixed ploidy
+# any faster. 
 
+# Explored some other options for vectorizing, such as 'pairwise.WCfst' but
+# they can not accept markersets of mixed ploidy
+
+# Finally decided to re-write PairwiseFstTree.GCL using '%dopar%' to run on
+# server and multi-core over 16 cores
 
 
 # Create fstat .dat file for hierfstat
@@ -897,10 +902,56 @@ KMA211Pops41nuclearloci_fst.mat <- pairwise.WCfst(dat = dat[, -(mito.loci+1)], d
 proc.time() - ptm  # 10149.05 sec = 169.15 min = 2.82 hours
 
 dput(x = KMA211Pops41nuclearloci_fst.mat, file = "Trees/KMA211Pops41nuclearloci_fst.mat.txt")
+KMA211Pops41nuclearloci_fst.mat <-  dget(file = "Trees/KMA211Pops41nuclearloci_fst.mat.txt")
 str(KMA211Pops41nuclearloci_fst.mat)
 KMA211Pops41nuclearloci_fst.mat[upper.tri(KMA211Pops41nuclearloci_fst.mat)]
 
-## Will compare this pairwise Fst matrix with "standard" function
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Will compare 'pairwise.WCfst' pairwise Fst matrix with "standard" function that includes mitochondrial SNP
+
+KMA211Pops42Loci_PairwiseFstTree <- dget(file = "Trees/211Pops42Loci_PairwiseFstTree.txt")
+str(KMA211Pops42Loci_PairwiseFstTree, max.level = 1)
+
+# Plot quick tree
+par(mar = c(5, 5, 5, 5), oma = c(3, 0, 0, 0))
+plot.phylo(x = KMA211Pops42Loci_PairwiseFstTree$tree, cex = 0.5, no.margin = TRUE, type = "p")
+axisPhylo(1, las = 1, backward = FALSE)
+
+str(KMA211Pops42Loci_PairwiseFstTree$PairwiseFst)
+
+
+
+# Compare Fst estimates
+KMA211Pops41nuclearloci_fst.mat <-  dget(file = "Trees/KMA211Pops41nuclearloci_fst.mat.txt")
+diag(KMA211Pops41nuclearloci_fst.mat) <- 0
+
+max(KMA211Pops41nuclearloci_fst.mat, na.rm = TRUE); max(KMA211Pops42Loci_PairwiseFstTree$PairwiseFst)
+
+require(lattice)
+require(devEMF)
+
+new.colors <- colorRampPalette(c("black", "white"))
+
+# emf(file = "Likelihood Profiles/KMA211Pops_42loci_Confusion.emf", width = 6.5, height = 6.5, family = "Times")
+levelplot(KMA211Pops42Loci_PairwiseFstTree$PairwiseFst, col.regions = new.colors, xlab = "Pop", ylab = "Pop", aspect = "fill", 
+          at = seq(0, max(KMA211Pops42Loci_PairwiseFstTree$PairwiseFst), length.out = 100), scales = list(x = list(labels = 1:211), y = list(labels = 1:211)))
+
+levelplot(KMA211Pops41nuclearloci_fst.mat, col.regions = new.colors, xlab = "Pop", ylab = "Pop", aspect = "fill", 
+          at = seq(0, max(KMA211Pops42Loci_PairwiseFstTree$PairwiseFst), length.out = 100), scales = list(x = list(labels = 1:211), y = list(labels = 1:211)))
+
+
+# dev.off()
+
+# Compare using residuals
+new.colors2 <- colorRampPalette(c("darkred", "white", "darkgreen"))
+
+range(KMA211Pops42Loci_PairwiseFstTree$PairwiseFst - KMA211Pops41nuclearloci_fst.mat)
+
+levelplot(KMA211Pops42Loci_PairwiseFstTree$PairwiseFst - KMA211Pops41nuclearloci_fst.mat, col.regions = new.colors2, xlab = "Pop", ylab = "Pop", aspect = "fill", 
+          at = seq(-0.1, 0.1, length.out = 100), scales = list(x = list(labels = 1:211), y = list(labels = 1:211)))
+
+# Mitochondrial marker clearly magnifies the north/south lineage split
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
