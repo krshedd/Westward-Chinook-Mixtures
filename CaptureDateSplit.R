@@ -161,7 +161,7 @@ setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016
 rm(list = ls())
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-### SPENC14
+#### KSPENC14 ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -273,7 +273,7 @@ write.csv(x = oceanak.df, file = "OceanAK Tissue Dump/KSPENC14/GEN_SAMPLED_FISH_
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-### SPENC14
+#### KCHIGC14 ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -359,3 +359,142 @@ dimnames(oceanak.df)[[2]][1] <- "FK_COLLECTION_ID"
 
 write.csv(x = oceanak.df, file = "OceanAK Tissue Dump/KCHIGC14/GEN_SAMPLED_FISH_TISSUE Upload.csv", row.names = FALSE, quote = FALSE)
 
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### KKODC14 ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures")
+rm(list = ls())
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Read in OceanAK data as data.table (lightning fast!)
+require(data.table)
+oceanak.dt <- fread(input = "OceanAK Tissue Dump/KKODC14/GEN_SAMPLED_FISH_TISSUE.csv")  # amazing
+str(oceanak.dt)
+# Convert to data.frame
+oceanak.df <- data.frame(oceanak.dt)
+str(oceanak.df)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Read in collection raw datasheet from Birch
+require(xlsx)
+Kodiak_Datasheet.df <- read.xlsx(file = "Extraction/KMA Chinook Genetics 2014 Extractions.xlsx", sheetName = "2014 KMA Chinook")
+str(Kodiak_Datasheet.df)
+Spen_Chignik_Datasheet.df <- read.xlsx(file = "South Pen 2014/Extraction/WW Chinook Genetics 2014.xlsx", sheetName = "2014 Pen-Chig Chinook")
+str(Spen_Chignik_Datasheet.df)
+
+oceanak.df$FK_FISH_ID[!oceanak.df$FK_FISH_ID %in% Kodiak_Spen_Chignik_Datasheet.df$VIAL] %in% Spen_Chignik_Datasheet.df$VIAL
+
+# Combine SpenChig and Kodiak datasheets as some KKODC14 fish are from Chignik...
+dimnames(Kodiak_Datasheet.df)[[2]] %in% dimnames(Spen_Chignik_Datasheet.df)[[2]]
+dimnames(Spen_Chignik_Datasheet.df)[[2]] %in% dimnames(Kodiak_Datasheet.df)[[2]]
+
+Kodiak_Spen_Chignik_Datasheet.df <- rbind(Spen_Chignik_Datasheet.df[, dimnames(Spen_Chignik_Datasheet.df)[[2]][-1]],
+                                          Kodiak_Datasheet.df[, dimnames(Spen_Chignik_Datasheet.df)[[2]][-1]])
+str(Kodiak_Spen_Chignik_Datasheet.df)
+
+
+# Do the oceanak fish exist in datasheet?
+sum(oceanak.df$FK_FISH_ID %in% Kodiak_Spen_Chignik_Datasheet.df$VIAL); dim(oceanak.df)[1]
+oceanak.df$FK_FISH_ID[!oceanak.df$FK_FISH_ID %in% Kodiak_Spen_Chignik_Datasheet.df$VIAL]
+
+# Do the datasheet fish exist in the oceanak fish?
+table(Kodiak_Spen_Chignik_Datasheet.df$VIAL %in% oceanak.df$FK_FISH_ID); dim(oceanak.df)[1]
+
+# Are there duplicates in the datasheet?
+table(table(Kodiak_Spen_Chignik_Datasheet.df$VIAL))
+
+names(which(table(Kodiak_Spen_Chignik_Datasheet.df$VIAL) == 2))
+
+
+
+
+
+
+# Subset fish we want for date and area
+Data_Area.df <- Kodiak_Spen_Chignik_Datasheet.df[Kodiak_Spen_Chignik_Datasheet.df$VIAL %in% oceanak.df$FK_FISH_ID, c("VIAL", "DATE.HARVESTED", "SAMPLING.AREA")]
+str(Data_Area.df)
+
+Data_Area.df$DATE.HARVESTED <- as.character(Data_Area.df$DATE.HARVESTED)
+Data_Area.df$SAMPLING.AREA <- as.character(Data_Area.df$SAMPLING.AREA)
+
+# Fix area
+unique(Data_Area.df$SAMPLING.AREA)
+
+# Fix date
+sum(is.na(Data_Area.df$DATE.HARVESTED))
+
+x <- unique(Data_Area.df$DATE.HARVESTED)
+x
+
+# y = x[3]
+# i.temp = unlist(strsplit(x = y, split = "-|/|//|, "))
+# dates <- paste(i.temp[length(i.temp)], i.temp[1], 2014, sep = "-")
+# format(c(as.Date(dates, "%b-%d-%Y"), as.Date(dates, "%b-%d-%Y")+1), "%m/%d/%Y")
+
+y = x[-grep(pattern = "40", x = x)]
+
+sapply(y, function(i) {
+  i.temp = unlist(strsplit(x = i, split = "-|/|//|, "))
+  if(length(i.temp) == 3){
+    dates <- rep(paste(2014, i.temp[1], i.temp[2], sep = "-"), 2)
+  } else {
+    dates <- c(paste(2014, i.temp[1], i.temp[2], sep = "-"),
+               paste(2014, i.temp[1], i.temp[3], sep = "-"))
+  }
+  format(as.Date(dates), "%m/%d/%Y")
+})
+
+
+newdates <- t(sapply(Data_Area.df$DATE.HARVESTED, function(dat) {
+  if(is.na(dat)) {
+    rep(NA, 2)
+  } else {
+    if(grepl(pattern = "40", dat)) {
+      rep(format(as.Date(as.numeric(dat), origin = "1904-01-01"), "%m/%d/%Y"), 2)
+    } else {
+      i.temp = unlist(strsplit(x = dat, split = "-|/|//|, "))
+      if(length(i.temp) == 3){
+        dates <- rep(paste(2014, i.temp[1], i.temp[2], sep = "-"), 2)
+      } else {
+        dates <- c(paste(2014, i.temp[1], i.temp[2], sep = "-"),
+                   paste(2014, i.temp[1], i.temp[3], sep = "-"))
+      }
+      format(as.Date(dates), "%m/%d/%Y")
+    }
+  }
+}))
+
+str(newdates)
+
+
+Data_Area.df$Start.Date <- newdates[, 1]
+Data_Area.df$End.Date <- newdates[, 2]
+
+
+oceanak.df$CAPTURE_DATE <- Data_Area.df$Start.Date[match(oceanak.df$FK_FISH_ID, Data_Area.df$VIAL)]
+oceanak.df$END_CAPTURE_DATE <- Data_Area.df$End.Date[match(oceanak.df$FK_FISH_ID, Data_Area.df$VIAL)]
+oceanak.df$CAPTURE_LOCATION <- Data_Area.df$SAMPLING.AREA[match(oceanak.df$FK_FISH_ID, Data_Area.df$VIAL)]
+
+sum(is.na(oceanak.df$MESH_SIZE_COMMENT))
+
+head(oceanak.df)
+str(oceanak.df)
+
+# Replace NAs
+oceanak.df[is.na(oceanak.df)] <- ""
+dimnames(oceanak.df)[[2]][1] <- "FK_COLLECTION_ID"
+str(oceanak.df)
+
+table(oceanak.df$MESH_SIZE_COMMENT)
+oceanak.df$FK_FISH_ID[oceanak.df$MESH_SIZE_COMMENT == "#N/A"]
+
+
+oceanak.df$MESH_SIZE_COMMENT[oceanak.df$MESH_SIZE_COMMENT == "#N/A"][-c(1:3)] <- ""
+
+oceanak.df$FK_FISH_ID[oceanak.df$MESH_SIZE_COMMENT == "#N/A"]
+oceanak.df$MESH_SIZE_COMMENT[oceanak.df$MESH_SIZE_COMMENT == "#N/A"] <- c("Early", "Early", "Late")
+
+str(oceanak.df)
+
+
+write.csv(x = oceanak.df, file = "OceanAK Tissue Dump/KKODC14/GEN_SAMPLED_FISH_TISSUE Upload.csv", row.names = FALSE, quote = FALSE)
