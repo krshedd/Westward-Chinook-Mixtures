@@ -168,7 +168,7 @@ rm(list = ls())
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Read in OceanAK data as data.table (lightning fast!)
 require(data.table)
-oceanak.dt <- fread(input = "OceanAK Tissue Dump/KSPENC14/GEN_SAMPLED_FISH_TISSUE Update.csv")  # amazing
+oceanak.dt <- fread(input = "OceanAK Tissue Dump/KSPENC14/GEN_SAMPLED_FISH_TISSUE.csv")  # amazing
 str(oceanak.dt)
 # Convert to data.frame
 oceanak.df <- data.frame(oceanak.dt)
@@ -211,6 +211,10 @@ unique(Data_Area.df$SAMPLING.AREA)
 sum(is.na(Data_Area.df$DATE.HARVESTED))
 
 x <- unique(Data_Area.df$DATE.HARVESTED)
+
+as.Date(40336, origin = "1904-01-01", format = "%m/%d/%Y")
+rep(format(x = as.Date(40336, origin = "1904-01-01"), format = "%m/%d/%Y"), 2)
+
 
 rep(as.character(as.Date(40336, origin = "1904-01-01")), 2)
 
@@ -262,5 +266,6 @@ str(oceanak.df)
 
 # Replace NAs
 oceanak.df[is.na(oceanak.df)] <- ""
+dimnames(oceanak.df)[[2]][1] <- "FK_COLLECTION_ID"
 
-write.csv(x = oceanak.df, file = "OceanAK Tissue Dump/KSPENC14/GEN_SAMPLED_FISH_TISSUE Upload.csv", row.names = FALSE)
+write.csv(x = oceanak.df, file = "OceanAK Tissue Dump/KSPENC14/GEN_SAMPLED_FISH_TISSUE Upload.csv", row.names = FALSE, quote = FALSE)
