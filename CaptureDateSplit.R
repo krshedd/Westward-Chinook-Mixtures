@@ -498,3 +498,420 @@ str(oceanak.df)
 
 
 write.csv(x = oceanak.df, file = "OceanAK Tissue Dump/KKODC14/GEN_SAMPLED_FISH_TISSUE Upload.csv", row.names = FALSE, quote = FALSE)
+
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### KALITC15 ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures")
+rm(list = ls())
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Read in OceanAK data as data.table (lightning fast!)
+require(data.table)
+oceanak.dt <- fread(input = "OceanAK Tissue Dump/KALITC15/GEN_SAMPLED_FISH_TISSUE.csv")  # amazing
+str(oceanak.dt)
+# Convert to data.frame
+oceanak.df <- data.frame(oceanak.dt)
+str(oceanak.df)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Read in collection raw datasheet from Birch
+require(xlsx)
+Kodiak_Datasheet.df <- read.xlsx(file = "Extraction/OLD/KMA Chinook Sample Selection 2015mbf.xlsx", sheetName = "Data", stringsAsFactors = FALSE)
+str(Kodiak_Datasheet.df)
+
+
+
+# First need one row per fish to begin with
+vials2besplit <- Kodiak_Datasheet.df$vial.number
+vials2besplit
+
+
+unlist(strsplit(x = grep(pattern = "; ", x = vials2besplit, value = TRUE), split = "; "))
+
+
+# Get individual vial numbers by splitting characters
+test <- sapply(vials2besplit, function(vial) {
+  if(";" %in% unlist(strsplit(x = vial, split = ""))){
+    vial <- unlist(strsplit(x = vial, split = "; "))
+  }
+  if("-" %in% unlist(strsplit(x = vial, split = ""))) {
+    vials <- sapply(vial, function(Vial) {as.numeric(unlist(strsplit(x = Vial, split = "-")))}, simplify = FALSE )
+    lapply(vials, function(Vials) {seq(from = Vials[1], to = Vials[2], by = 1)})
+  } else {
+    as.numeric(vial)
+  }
+} )
+
+
+# Get number of individuals per row
+sampsize <- sapply(test, function(row) {length(unlist(row))})
+str(sampsize, max.level = 0)
+head(sampsize)
+
+# check weird one which was a collection of two different vial ranges
+test[352]
+
+# Number of fish sampled for 2015 mixtures
+length(unlist(x = test, recursive = TRUE, use.names = FALSE))
+
+colnames(Kodiak_Datasheet.df)
+
+
+# Is sample size equal to the number of fish thought to be sampled?
+table(sampsize == apply(Kodiak_Datasheet.df[, 3:8], 1, function(samp.event) {sum(samp.event, na.rm = TRUE)}))
+
+sampsize[!sampsize == apply(Kodiak_Datasheet.df[, 3:8], 1, function(samp.event) {sum(samp.event, na.rm = TRUE)})]
+apply(Kodiak_Datasheet.df[, 3:8], 1, function(samp.event) {sum(samp.event, na.rm = TRUE)})[!apply(Kodiak_Datasheet.df[, 3:8], 1, function(samp.event) {sum(samp.event, na.rm = TRUE)}) == sampsize]
+
+# Disregard the discrepancy with the Kodiak_Datasheet.df. There is a note on vials 212-213 that the 3rd sampled fish had no genetics sample taken
+
+Kodiak_Datasheet.df$SampleSize <- sampsize
+
+str(Kodiak_Datasheet.df)
+
+
+# Create data.frame with one row per fish
+king2015perfish <- apply(X = Kodiak_Datasheet.df, 1, function(row) {matrix(data = rep(row, times = row["SampleSize"]), ncol = 18, byrow = TRUE)} )
+king2015perfish.mat <- Reduce(f = rbind, x = king2015perfish)
+
+str(king2015perfish.mat)
+king2015perfish.df <- data.frame(king2015perfish.mat, stringsAsFactors = FALSE)
+head(king2015perfish.df)
+dimnames(king2015perfish.df)[[2]] <- dimnames(Kodiak_Datasheet.df)[[2]]
+str(king2015perfish.df)
+length(unlist(test, recursive = TRUE, use.names = FALSE))
+
+king2015perfish.df$VialNumber <- unlist(test, recursive = TRUE, use.names = FALSE)
+
+king2015perfish.df.final <- king2015perfish.df[, c("VialNumber", "Sampling.Port", "Area", "single.day", "catch.dates", "Card..", "Strata")]
+str(king2015perfish.df.final)
+
+Kodiak_Datasheet_OneRowPerFish.df <- king2015perfish.df.final
+str(Kodiak_Datasheet_OneRowPerFish.df)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# Do the oceanak fish exist in datasheet?
+sum(oceanak.df$FK_FISH_ID %in% Kodiak_Datasheet_OneRowPerFish.df$VialNumber); dim(oceanak.df)[1]
+oceanak.df$FK_FISH_ID[!oceanak.df$FK_FISH_ID %in% Kodiak_Datasheet_OneRowPerFish.df$VialNumber]
+
+# Do the datasheet fish exist in the oceanak fish?
+table(Kodiak_Datasheet_OneRowPerFish.df$VialNumber %in% oceanak.df$FK_FISH_ID); dim(oceanak.df)[1]
+
+# Are there duplicates in the datasheet?
+table(table(Kodiak_Datasheet_OneRowPerFish.df$VialNumber))
+
+names(which(table(Kodiak_Datasheet_OneRowPerFish.df$VialNumber) == 2))
+
+
+
+
+
+
+# Subset fish we want for date and area
+Data_Area.df <- Kodiak_Datasheet_OneRowPerFish.df[Kodiak_Datasheet_OneRowPerFish.df$VialNumber %in% oceanak.df$FK_FISH_ID, 
+                                                  c("VialNumber", "catch.dates", "Area", "Strata")]
+colnames(Data_Area.df) <- c("VIAL", "DATE.HARVESTED", "SAMPLING.AREA", "STRATA")
+str(Data_Area.df)
+
+Data_Area.df$DATE.HARVESTED <- as.character(Data_Area.df$DATE.HARVESTED)
+Data_Area.df$SAMPLING.AREA <- as.character(Data_Area.df$SAMPLING.AREA)
+
+# Fix area
+unique(Data_Area.df$SAMPLING.AREA)
+
+# Fix date
+sum(is.na(Data_Area.df$DATE.HARVESTED))
+
+x <- unique(Data_Area.df$DATE.HARVESTED)
+x
+
+z = x[grep(pattern = "42", x = x)]
+sapply(z, function(i) {
+  rep(format(as.Date(as.numeric(i), origin = "1899-12-30"), "%m/%d/%Y"), 2)
+})
+
+  
+y = x[-grep(pattern = "42", x = x)]
+
+sapply(y, function(i) {
+  i.temp = unlist(strsplit(x = i, split = "-|/|//|, "))
+  if(length(i.temp) == 3){
+    dates <- rep(paste(2014, i.temp[1], i.temp[2], sep = "-"), 2)
+  } else {
+    dates <- c(paste(2014, i.temp[1], i.temp[2], sep = "-"),
+               paste(2014, i.temp[3], i.temp[4], sep = "-"))
+  }
+  format(as.Date(dates), "%m/%d/%Y")
+})
+
+
+newdates <- t(sapply(Data_Area.df$DATE.HARVESTED, function(dat) {
+  if(is.na(dat)) {
+    rep(NA, 2)
+  } else {
+    if(grepl(pattern = "42", dat)) {
+      rep(format(as.Date(as.numeric(dat), origin = "1899-12-30"), "%m/%d/%Y"), 2)
+    } else {
+      i.temp = unlist(strsplit(x = dat, split = "-|/|//|, "))
+      if(length(i.temp) == 3){
+        dates <- rep(paste(2014, i.temp[1], i.temp[2], sep = "-"), 2)
+      } else {
+        dates <- c(paste(2014, i.temp[1], i.temp[2], sep = "-"),
+                   paste(2014, i.temp[3], i.temp[4], sep = "-"))
+      }
+      format(as.Date(dates), "%m/%d/%Y")
+    }
+  }
+}))
+
+str(newdates)
+
+
+Data_Area.df$Start.Date <- newdates[, 1]
+Data_Area.df$End.Date <- newdates[, 2]
+
+
+oceanak.df$CAPTURE_DATE <- Data_Area.df$Start.Date[match(oceanak.df$FK_FISH_ID, Data_Area.df$VIAL)]
+oceanak.df$END_CAPTURE_DATE <- Data_Area.df$End.Date[match(oceanak.df$FK_FISH_ID, Data_Area.df$VIAL)]
+oceanak.df$CAPTURE_LOCATION <- Data_Area.df$SAMPLING.AREA[match(oceanak.df$FK_FISH_ID, Data_Area.df$VIAL)]
+oceanak.df$MESH_SIZE_COMMENT <- Data_Area.df$STRATA[match(oceanak.df$FK_FISH_ID, Data_Area.df$VIAL)]
+
+sum(is.na(oceanak.df$MESH_SIZE_COMMENT))
+
+head(oceanak.df)
+str(oceanak.df)
+
+# Replace NAs
+oceanak.df[is.na(oceanak.df)] <- ""
+dimnames(oceanak.df)[[2]][1] <- "FK_COLLECTION_ID"
+str(oceanak.df)
+
+table(oceanak.df$MESH_SIZE_COMMENT, oceanak.df$CAPTURE_LOCATION)
+str(oceanak.df)
+
+
+write.csv(x = oceanak.df, file = "OceanAK Tissue Dump/KALITC15/GEN_SAMPLED_FISH_TISSUE Upload.csv", row.names = FALSE, quote = FALSE)
+
+
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### KKODC15 ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures")
+rm(list = ls())
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Read in OceanAK data as data.table (lightning fast!)
+require(data.table)
+oceanak.dt <- fread(input = "OceanAK Tissue Dump/KKODC15/GEN_SAMPLED_FISH_TISSUE.csv")  # amazing
+str(oceanak.dt)
+# Convert to data.frame
+oceanak.df <- data.frame(oceanak.dt)
+str(oceanak.df)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Read in collection raw datasheet from Birch
+require(xlsx)
+Kodiak_Datasheet.df <- read.xlsx(file = "Extraction/OLD/KMA Chinook Sample Selection 2015mbf.xlsx", sheetName = "Data", stringsAsFactors = FALSE)
+str(Kodiak_Datasheet.df)
+
+
+
+# First need one row per fish to begin with
+vials2besplit <- Kodiak_Datasheet.df$vial.number
+vials2besplit
+
+
+unlist(strsplit(x = grep(pattern = "; ", x = vials2besplit, value = TRUE), split = "; "))
+
+
+# Get individual vial numbers by splitting characters
+test <- sapply(vials2besplit, function(vial) {
+  if(";" %in% unlist(strsplit(x = vial, split = ""))){
+    vial <- unlist(strsplit(x = vial, split = "; "))
+  }
+  if("-" %in% unlist(strsplit(x = vial, split = ""))) {
+    vials <- sapply(vial, function(Vial) {as.numeric(unlist(strsplit(x = Vial, split = "-")))}, simplify = FALSE )
+    lapply(vials, function(Vials) {seq(from = Vials[1], to = Vials[2], by = 1)})
+  } else {
+    as.numeric(vial)
+  }
+} )
+
+
+# Get number of individuals per row
+sampsize <- sapply(test, function(row) {length(unlist(row))})
+str(sampsize, max.level = 0)
+head(sampsize)
+
+# check weird one which was a collection of two different vial ranges
+test[352]
+
+# Number of fish sampled for 2015 mixtures
+length(unlist(x = test, recursive = TRUE, use.names = FALSE))
+
+colnames(Kodiak_Datasheet.df)
+
+
+# Is sample size equal to the number of fish thought to be sampled?
+table(sampsize == apply(Kodiak_Datasheet.df[, 3:8], 1, function(samp.event) {sum(samp.event, na.rm = TRUE)}))
+
+sampsize[!sampsize == apply(Kodiak_Datasheet.df[, 3:8], 1, function(samp.event) {sum(samp.event, na.rm = TRUE)})]
+apply(Kodiak_Datasheet.df[, 3:8], 1, function(samp.event) {sum(samp.event, na.rm = TRUE)})[!apply(Kodiak_Datasheet.df[, 3:8], 1, function(samp.event) {sum(samp.event, na.rm = TRUE)}) == sampsize]
+
+# Disregard the discrepancy with the Kodiak_Datasheet.df. There is a note on vials 212-213 that the 3rd sampled fish had no genetics sample taken
+
+Kodiak_Datasheet.df$SampleSize <- sampsize
+
+str(Kodiak_Datasheet.df)
+
+
+# Create data.frame with one row per fish
+king2015perfish <- apply(X = Kodiak_Datasheet.df, 1, function(row) {matrix(data = rep(row, times = row["SampleSize"]), ncol = 18, byrow = TRUE)} )
+king2015perfish.mat <- Reduce(f = rbind, x = king2015perfish)
+
+str(king2015perfish.mat)
+king2015perfish.df <- data.frame(king2015perfish.mat, stringsAsFactors = FALSE)
+head(king2015perfish.df)
+dimnames(king2015perfish.df)[[2]] <- dimnames(Kodiak_Datasheet.df)[[2]]
+str(king2015perfish.df)
+length(unlist(test, recursive = TRUE, use.names = FALSE))
+
+king2015perfish.df$VialNumber <- unlist(test, recursive = TRUE, use.names = FALSE)
+
+king2015perfish.df.final <- king2015perfish.df[, c("VialNumber", "Sampling.Port", "Area", "single.day", "catch.dates", "Card..", "Strata")]
+str(king2015perfish.df.final)
+
+Kodiak_Datasheet_OneRowPerFish.df <- king2015perfish.df.final
+str(Kodiak_Datasheet_OneRowPerFish.df)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# Do the oceanak fish exist in datasheet?
+sum(oceanak.df$FK_FISH_ID %in% Kodiak_Datasheet_OneRowPerFish.df$VialNumber); dim(oceanak.df)[1]
+oceanak.df$FK_FISH_ID[!oceanak.df$FK_FISH_ID %in% Kodiak_Datasheet_OneRowPerFish.df$VialNumber]
+
+# Do the datasheet fish exist in the oceanak fish?
+table(Kodiak_Datasheet_OneRowPerFish.df$VialNumber %in% oceanak.df$FK_FISH_ID); dim(oceanak.df)[1]
+
+# Are there duplicates in the datasheet?
+table(table(Kodiak_Datasheet_OneRowPerFish.df$VialNumber))
+
+names(which(table(Kodiak_Datasheet_OneRowPerFish.df$VialNumber) == 2))
+
+
+## Data sheet indicates that vials 1152-1157 were not used
+str(Kodiak_Datasheet_OneRowPerFish.df)
+
+new.rows.df <- data.frame(VialNumber = 1152:1157,
+                          Sampling.Port = rep('', 6),
+                          Area = rep('', 6),
+                          single.day = rep('', 6),
+                          catch.dates = rep('', 6),
+                          Card.. = rep('', 6),
+                          Strata = rep('', 6), stringsAsFactors = FALSE)
+str(new.rows.df)
+Kodiak_Datasheet_OneRowPerFish_new.df <- rbind(Kodiak_Datasheet_OneRowPerFish.df, new.rows.df)
+sum(oceanak.df$FK_FISH_ID %in% Kodiak_Datasheet_OneRowPerFish_new.df$VialNumber); dim(oceanak.df)[1]
+tail(Kodiak_Datasheet_OneRowPerFish_new.df, 10)
+
+
+
+# Subset fish we want for date and area
+Data_Area.df <- Kodiak_Datasheet_OneRowPerFish_new.df[Kodiak_Datasheet_OneRowPerFish_new.df$VialNumber %in% oceanak.df$FK_FISH_ID, 
+                                                  c("VialNumber", "catch.dates", "Area", "Strata")]
+colnames(Data_Area.df) <- c("VIAL", "DATE.HARVESTED", "SAMPLING.AREA", "STRATA")
+str(Data_Area.df)
+
+Data_Area.df$DATE.HARVESTED <- as.character(Data_Area.df$DATE.HARVESTED)
+Data_Area.df$SAMPLING.AREA <- as.character(Data_Area.df$SAMPLING.AREA)
+
+# Fix area
+unique(Data_Area.df$SAMPLING.AREA)
+table((Data_Area.df$SAMPLING.AREA), useNA = "always")
+
+
+# Fix date
+sum(is.na(Data_Area.df$DATE.HARVESTED))
+
+x <- unique(Data_Area.df$DATE.HARVESTED)
+x
+
+z = x[grep(pattern = "42", x = x)]
+sapply(z, function(i) {
+  rep(format(as.Date(as.numeric(i), origin = "1899-12-30"), "%m/%d/%Y"), 2)
+})
+
+
+y = x[-grep(pattern = "42", x = x)]
+y <- y[!y == '']
+y
+sapply(y, function(i) {
+  i.temp = unlist(strsplit(x = i, split = "-|/|//|, "))
+  if(length(i.temp) == 3){
+    dates <- rep(paste(2014, i.temp[1], i.temp[2], sep = "-"), 2)
+  } else {
+    dates <- c(paste(2014, i.temp[1], i.temp[2], sep = "-"),
+               paste(2014, i.temp[3], i.temp[4], sep = "-"))
+  }
+  format(as.Date(dates), "%m/%d/%Y")
+})
+
+
+newdates <- t(sapply(Data_Area.df$DATE.HARVESTED, function(dat) {
+  if(dat == "") {
+    rep(dat, 2)
+  } else {
+    if(grepl(pattern = "42", dat)) {
+      rep(format(as.Date(as.numeric(dat), origin = "1899-12-30"), "%m/%d/%Y"), 2)
+    } else {
+      i.temp = unlist(strsplit(x = dat, split = "-|/|//|, "))
+      if(length(i.temp) == 3){
+        dates <- rep(paste(2014, i.temp[1], i.temp[2], sep = "-"), 2)
+      } else {
+        dates <- c(paste(2014, i.temp[1], i.temp[2], sep = "-"),
+                   paste(2014, i.temp[3], i.temp[4], sep = "-"))
+      }
+      format(as.Date(dates), "%m/%d/%Y")
+    }
+  }
+}))
+
+str(newdates)
+head(newdates, 10); tail(newdates, 10)
+
+
+Data_Area.df$Start.Date <- newdates[, 1]
+Data_Area.df$End.Date <- newdates[, 2]
+
+
+oceanak.df$CAPTURE_DATE <- Data_Area.df$Start.Date[match(oceanak.df$FK_FISH_ID, Data_Area.df$VIAL)]
+oceanak.df$END_CAPTURE_DATE <- Data_Area.df$End.Date[match(oceanak.df$FK_FISH_ID, Data_Area.df$VIAL)]
+oceanak.df$CAPTURE_LOCATION <- Data_Area.df$SAMPLING.AREA[match(oceanak.df$FK_FISH_ID, Data_Area.df$VIAL)]
+oceanak.df$MESH_SIZE_COMMENT <- Data_Area.df$STRATA[match(oceanak.df$FK_FISH_ID, Data_Area.df$VIAL)]
+
+sum(is.na(oceanak.df$MESH_SIZE_COMMENT))
+
+head(oceanak.df)
+str(oceanak.df)
+
+# Replace NAs
+oceanak.df[is.na(oceanak.df)] <- ""
+dimnames(oceanak.df)[[2]][1] <- "FK_COLLECTION_ID"
+str(oceanak.df)
+
+# Fix Mesh_size_comment
+oceanak.df$MESH_SIZE_COMMENT <- gsub(pattern = "E ", replacement = "E", x = oceanak.df$MESH_SIZE_COMMENT)
+
+table(oceanak.df$MESH_SIZE_COMMENT, oceanak.df$CAPTURE_LOCATION)
+str(oceanak.df)
+
+
+write.csv(x = oceanak.df, file = "OceanAK Tissue Dump/KKODC15/GEN_SAMPLED_FISH_TISSUE Upload.csv", row.names = FALSE, quote = FALSE)
