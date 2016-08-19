@@ -637,14 +637,14 @@ sapply(z, function(i) {
 
   
 y = x[-grep(pattern = "42", x = x)]
-
+y
 sapply(y, function(i) {
   i.temp = unlist(strsplit(x = i, split = "-|/|//|, "))
   if(length(i.temp) == 3){
-    dates <- rep(paste(2014, i.temp[1], i.temp[2], sep = "-"), 2)
+    dates <- rep(paste(2015, i.temp[1], i.temp[2], sep = "-"), 2)
   } else {
-    dates <- c(paste(2014, i.temp[1], i.temp[2], sep = "-"),
-               paste(2014, i.temp[3], i.temp[4], sep = "-"))
+    dates <- c(paste(2015, i.temp[1], i.temp[2], sep = "-"),
+               paste(2015, i.temp[3], i.temp[4], sep = "-"))
   }
   format(as.Date(dates), "%m/%d/%Y")
 })
@@ -659,10 +659,10 @@ newdates <- t(sapply(Data_Area.df$DATE.HARVESTED, function(dat) {
     } else {
       i.temp = unlist(strsplit(x = dat, split = "-|/|//|, "))
       if(length(i.temp) == 3){
-        dates <- rep(paste(2014, i.temp[1], i.temp[2], sep = "-"), 2)
+        dates <- rep(paste(2015, i.temp[1], i.temp[2], sep = "-"), 2)
       } else {
-        dates <- c(paste(2014, i.temp[1], i.temp[2], sep = "-"),
-                   paste(2014, i.temp[3], i.temp[4], sep = "-"))
+        dates <- c(paste(2015, i.temp[1], i.temp[2], sep = "-"),
+                   paste(2015, i.temp[3], i.temp[4], sep = "-"))
       }
       format(as.Date(dates), "%m/%d/%Y")
     }
@@ -856,10 +856,10 @@ y
 sapply(y, function(i) {
   i.temp = unlist(strsplit(x = i, split = "-|/|//|, "))
   if(length(i.temp) == 3){
-    dates <- rep(paste(2014, i.temp[1], i.temp[2], sep = "-"), 2)
+    dates <- rep(paste(2015, i.temp[1], i.temp[2], sep = "-"), 2)
   } else {
-    dates <- c(paste(2014, i.temp[1], i.temp[2], sep = "-"),
-               paste(2014, i.temp[3], i.temp[4], sep = "-"))
+    dates <- c(paste(2015, i.temp[1], i.temp[2], sep = "-"),
+               paste(2015, i.temp[3], i.temp[4], sep = "-"))
   }
   format(as.Date(dates), "%m/%d/%Y")
 })
@@ -874,10 +874,10 @@ newdates <- t(sapply(Data_Area.df$DATE.HARVESTED, function(dat) {
     } else {
       i.temp = unlist(strsplit(x = dat, split = "-|/|//|, "))
       if(length(i.temp) == 3){
-        dates <- rep(paste(2014, i.temp[1], i.temp[2], sep = "-"), 2)
+        dates <- rep(paste(2015, i.temp[1], i.temp[2], sep = "-"), 2)
       } else {
-        dates <- c(paste(2014, i.temp[1], i.temp[2], sep = "-"),
-                   paste(2014, i.temp[3], i.temp[4], sep = "-"))
+        dates <- c(paste(2015, i.temp[1], i.temp[2], sep = "-"),
+                   paste(2015, i.temp[3], i.temp[4], sep = "-"))
       }
       format(as.Date(dates), "%m/%d/%Y")
     }
