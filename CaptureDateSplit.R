@@ -1127,3 +1127,90 @@ str(oceanak.df)
 
 
 write.csv(x = oceanak.df, file = "OceanAK Tissue Dump/KLARSC15/GEN_SAMPLED_FISH_TISSUE Upload.csv", row.names = FALSE, quote = FALSE)
+
+
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### KKMAC16 ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures")
+rm(list = ls())
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Read in OceanAK data as data.table (lightning fast!)
+require(data.table)
+oceanak.dt <- fread(input = "OceanAK Tissue Dump/KKMAC16/GEN_SAMPLED_FISH_TISSUE.csv")  # amazing
+str(oceanak.dt)
+# Convert to data.frame
+oceanak.df <- data.frame(oceanak.dt)
+str(oceanak.df)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Read in collection raw datasheet from Birch
+require(xlsx)
+Kodiak_Datasheet.df <- read.xlsx(file = "Extraction/2016 Chinook Samples for Genetics Lab.xlsx", sheetName = "Chinook Extraction by Fish", stringsAsFactors = FALSE)
+str(Kodiak_Datasheet.df)
+
+
+table(is.na(oceanak.df$FK_FISH_ID))
+table(is.na(Kodiak_Datasheet.df$dna_vial))
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# Do the oceanak fish exist in datasheet?
+sum(oceanak.df$FK_FISH_ID %in% Kodiak_Datasheet.df$dna_vial); dim(oceanak.df)[1]
+oceanak.df$FK_FISH_ID[!oceanak.df$FK_FISH_ID %in% Kodiak_Datasheet.df$dna_vial]
+
+# Do the datasheet fish exist in the oceanak fish?
+table(Kodiak_Datasheet.df$dna_vial %in% oceanak.df$FK_FISH_ID); dim(oceanak.df)[1]
+
+# Are there duplicates in the datasheet?
+table(table(Kodiak_Datasheet.df$dna_vial))
+
+names(which(table(Kodiak_Datasheet.df$dna_vial) == 2))
+
+
+
+
+oceanak.df$CAPTURE_DATE <- Kodiak_Datasheet.df$Start.Date[match(oceanak.df$FK_FISH_ID, Kodiak_Datasheet.df$dna_vial)]
+oceanak.df$END_CAPTURE_DATE <- Kodiak_Datasheet.df$End.Date[match(oceanak.df$FK_FISH_ID, Kodiak_Datasheet.df$dna_vial)]
+oceanak.df$CAPTURE_LOCATION <- Kodiak_Datasheet.df$area_sampled[match(oceanak.df$FK_FISH_ID, Kodiak_Datasheet.df$dna_vial)]
+oceanak.df$MESH_SIZE_COMMENT <- Kodiak_Datasheet.df$Stratra[match(oceanak.df$FK_FISH_ID, Kodiak_Datasheet.df$dna_vial)]
+str(oceanak.df)
+
+
+# Fix Capture Location
+unique(oceanak.df$CAPTURE_LOCATION)
+oceanak.df$CAPTURE_LOCATION[oceanak.df$CAPTURE_LOCATION == unique(oceanak.df$CAPTURE_LOCATION)[5]] <- "Mixed"
+
+# Fix Capture Location
+unique(oceanak.df$MESH_SIZE_COMMENT)
+oceanak.df$MESH_SIZE_COMMENT[oceanak.df$MESH_SIZE_COMMENT == "Early"] <- "E"
+oceanak.df$MESH_SIZE_COMMENT[oceanak.df$MESH_SIZE_COMMENT == "Late"] <- "L"
+
+
+
+sum(is.na(oceanak.df$MESH_SIZE_COMMENT))
+
+head(oceanak.df)
+str(oceanak.df)
+
+# Replace NAs
+oceanak.df[is.na(oceanak.df)] <- ""
+dimnames(oceanak.df)[[2]][1] <- "FK_COLLECTION_ID"
+str(oceanak.df)
+
+# Fix Mesh_size_comment
+table(oceanak.df$MESH_SIZE_COMMENT, oceanak.df$CAPTURE_LOCATION)
+str(oceanak.df)
+
+# Reformat dates
+oceanak.df$CAPTURE_DATE <- format(oceanak.df$CAPTURE_DATE, format = "%m/%d/%Y")
+oceanak.df$END_CAPTURE_DATE <- format(oceanak.df$END_CAPTURE_DATE, format = "%m/%d/%Y")
+head(oceanak.df)
+
+
+write.csv(x = oceanak.df, file = "OceanAK Tissue Dump/KKMAC16/GEN_SAMPLED_FISH_TISSUE Upload.csv", row.names = FALSE, quote = FALSE)
+# Done
