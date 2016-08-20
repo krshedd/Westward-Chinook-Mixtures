@@ -914,6 +914,7 @@ KMA211Pops42Loci_PairwiseFstTree <- dget(file = "Trees/211Pops42Loci_PairwiseFst
 str(KMA211Pops42Loci_PairwiseFstTree, max.level = 1)
 
 # Plot quick tree
+require(ape)
 par(mar = c(5, 5, 5, 5), oma = c(3, 0, 0, 0))
 plot.phylo(x = KMA211Pops42Loci_PairwiseFstTree$tree, cex = 0.5, no.margin = TRUE, type = "p")
 axisPhylo(1, las = 1, backward = FALSE)
@@ -952,6 +953,104 @@ levelplot(KMA211Pops42Loci_PairwiseFstTree$PairwiseFst - KMA211Pops41nuclearloci
           at = seq(-0.1, 0.1, length.out = 100), scales = list(x = list(labels = 1:211), y = list(labels = 1:211)))
 
 # Mitochondrial marker clearly magnifies the north/south lineage split
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Tree for manuscript
+
+KMA211Pops42Loci_PairwiseFstTree <- dget(file = "Trees/211Pops42Loci_PairwiseFstTree.txt")
+str(KMA211Pops42Loci_PairwiseFstTree, max.level = 1)
+
+# Create a colored Fst tree for final figures
+require(ape)
+par(mar = c(5, 5, 5, 5), oma = c(3, 0, 0, 0))
+plot.phylo(x = KMA211Pops42Loci_PairwiseFstTree$tree, cex = 0.5, no.margin = TRUE, type = "p")
+axisPhylo(1, las = 1, backward = FALSE)
+
+str(KMA211Pops42Loci_PairwiseFstTree$tree, max.level = 1)
+
+ColorTree <- treeColor.GCL(tree = KMA211Pops42Loci_PairwiseFstTree$tree, currentnames = KMA211Pops, treenames = popnames211, groupvec = groupvec10, regioncol = match(colors10,colors()), regionpch = NULL)
+dput(x = ColorTree, file = "Trees/ColorTree.txt")
+str(ColorTree)
+
+groups10short <- c("Russia", "CWAK / Yukon", "North Peninsula", "Chignik", "Kodiak", "Cook Inlet", "Copper", "Souteast AK", "British Columbia", "West Coast US")
+dput(x = groups10short, file = "Objects/groups10short.txt")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Andy's method
+par(family="serif")
+require("ape")
+win.graph()
+par(mar = c(5, 0, 0 ,0))
+plot.phylo(x = ColorTree$tree, edge.color = ColorTree$color, edge.width = 3, use.edge.length = TRUE, 
+           show.tip.label = TRUE, adj = 0.05, font = 0.2, cex = 0.6, no.margin = FALSE, type = "p")  # cex = 0.8
+axisPhylo(1, las = 1, backward = FALSE)
+mtext(text=expression(italic(F)[ST]), side = 1, cex = 1.5, outer = FALSE, line = 3)
+
+# win.graph()
+# plot.new()
+legend(locator(1), legend = groups10short, fill = colors10, bty = "n")  
+#legend(x = "topright", legend = groups10short, fill = colors10, bty = "n")
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Big Tree, no legend
+par(family="serif")
+require(ape)
+require(devEMF)
+
+emf(file = "Trees/KMA211Pops42LociFstColorTree.emf", width = 6.5, height = 20)
+par(oma = c(4, 0, 0, 0))
+plot.phylo(x = ColorTree$tree, edge.color = ColorTree$color, edge.width = 3, use.edge.length = TRUE, 
+           show.tip.label = TRUE, adj = 0.05, font = 0.2, cex = 0.6, no.margin = TRUE, type = "p")  # cex = 0.8
+axisPhylo(1, las = 1, backward = FALSE)
+mtext(text=expression(italic(F)[ST]), side = 1, cex = 1.5, outer = FALSE, line = 3, adj = 0.4)
+dev.off()
+
+
+
+png(file = "Trees/KMA211Pops42LociFstColorTree.png", width = 6.5, height = 20, units = "in", res = 500)
+par(oma = c(4, 0, 0, 0))
+plot.phylo(x = ColorTree$tree, edge.color = ColorTree$color, edge.width = 3, use.edge.length = TRUE, 
+           show.tip.label = TRUE, adj = 0.05, font = 0.2, cex = 0.6, no.margin = TRUE, type = "p")  # cex = 0.8
+axisPhylo(1, las = 1, backward = FALSE)
+mtext(text=expression(italic(F)[ST]), side = 1, cex = 1.5, outer = FALSE, line = 3, adj = 0.4)
+legend(x = 0.45, y = 211, legend = groups10short, fill = colors10, bty = "n", cex = 1.1)
+dev.off()
+
+
+
+
+
+
+legend(locator(1), legend = groups10short, fill = colors10, bty = "n")  
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Tree with no labels + legend
+emf(file = "Trees/KMA211Pops42LociFstColorTreeNoLabelsNoMar.emf", width = 9, height = 6.67)
+par(oma = c(4, 0, 0, 0))
+plot.phylo(x = ColorTree$tree, edge.color = ColorTree$color, edge.width = 3, use.edge.length = TRUE, 
+           show.tip.label = FALSE, adj = 0.05, font = 0.2, cex = 0.8, no.margin = TRUE, type = "p")  # cex = 0.8
+axisPhylo(1, las = 1, backward = FALSE)
+mtext(text=expression(italic(F)[ST]), side = 1, cex = 1.5, outer = FALSE, line = 3, adj = 0.5)
+# legend(x = "topright", legend = groups10short, fill = colors10, bty = "n", cex = 1)
+legend(x = 0.45, y = 220, legend = groups10short, fill = colors10, bty = "n", cex = 1.1)
+dev.off()
+
+
+
+png(file = "Trees/KMA211Pops42LociFstColorTreeNoLabelsNoMar.png", width = 9, height = 6.67, units = "in", res = 500)
+par(oma = c(4, 0, 0, 0))
+plot.phylo(x = ColorTree$tree, edge.color = ColorTree$color, edge.width = 3, use.edge.length = TRUE, 
+           show.tip.label = FALSE, adj = 0.05, font = 0.2, cex = 0.8, no.margin = TRUE, type = "p")  # cex = 0.8
+axisPhylo(1, las = 1, backward = FALSE)
+mtext(text=expression(italic(F)[ST]), side = 1, cex = 1.5, outer = FALSE, line = 3, adj = 0.5)
+# legend(x = "topright", legend = groups10short, fill = colors10, bty = "n", cex = 1)
+legend(x = 0.45, y = 220, legend = groups10short, fill = colors10, bty = "n", cex = 1.1)
+dev.off()
+
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
