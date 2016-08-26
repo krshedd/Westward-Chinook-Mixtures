@@ -122,50 +122,146 @@ objects(pattern = "\\.gcl")
 sapply(c(SPEN2014, KMA2014, KMA2015), function(silly) {sum(is.na(get(paste(silly, ".gcl", sep = ''))$attributes$CAPTURE_DATE))} )  # Zeros are good
 
 ## Confirming samples sizes by date
-sapply(c(KMA2014, KMA2015), function(silly) {table(get(paste(silly, ".gcl", sep = ''))$attributes$CAPTURE_DATE)} )
+sapply(c(SPEN2014, KMA2014, KMA2015), function(silly) {table(get(paste(silly, ".gcl", sep = ''))$attributes$CAPTURE_DATE)} )
+
+str(KCHIGC14.gcl)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Pooling roadmap
+# 1) Pool all 2014 and all 2015 samples into two sillys by year
+# 2) Pool geographically within year by "CAPTURE_LOCATION"
+# 3) Pool temporally within geographic by year by "CAPTURE_DATE"
+
+#~~~~~~~~~~~~~~~~~~
+## South Pen + Chignik 2014
+KSPENCHIG14.gcl$n; KCHIGC14.gcl$n
+table(KKODC14.gcl$attributes$CAPTURE_LOCATION)
+
+# Grab Chignik fish out of KKODC14
+KKODC14_KCHIG14IDs <- AttributesToIDs.GCL(silly = "KKODC14", attribute = "CAPTURE_LOCATION", matching = "Chignik Outside")
+KKODC14_KCHIG14IDs <- list(na.omit(KKODC14_KCHIG14IDs))
+names(KKODC14_KCHIG14IDs) <- "KKODC14"
+
+# Pool Chignik and South Pen fish
+PoolCollections.GCL(collections = "KKODC14", loci = loci48, IDs = KKODC14_KCHIG14IDs, newname = "KKODC14_KCHIG14")
+str(KKODC14_KCHIG14.gcl)
+
+PoolCollections.GCL(collections = c(SPEN2014, "KKODC14_KCHIG14"), loci = loci48, IDs = NULL, newname = "KSPENCHIG14")
+str(KSPENCHIG14.gcl)
+table(KSPENCHIG14.gcl$attributes$CAPTURE_LOCATION)
 
 
-## Get dataframes of strata dates
-KMA.Strata.Dates.2014Alitak <- read.xlsx(file = "MixtureStrataDates.xlsx", sheetName = "2014Alitak", header = TRUE)
-KMA.Strata.Dates.2014Ayak <- read.xlsx(file = "MixtureStrataDates.xlsx", sheetName = "2014Ayak", header = TRUE)
-KMA.Strata.Dates.2014KarlUganUyak <- read.xlsx(file = "MixtureStrataDates.xlsx", sheetName = "2014KarlUganUyak", header = TRUE)
-KMA.Strata.Dates.2015 <- read.xlsx(file = "MixtureStrataDates.xlsx", sheetName = "2015", header = TRUE)
+#~~~~~~~~~~~~~~~~~~
+## Kodiak 2014, remove Chignik fish
+str(KKODC14.gcl)
+table(KKODC14.gcl$attributes$CAPTURE_LOCATION)
+unique(KKODC14.gcl$attributes$CAPTURE_LOCATION)[1:4]
+
+# Grab non-Chignik fish out of KKODC14
+KKODC14IDs <- AttributesToIDs.GCL(silly = "KKODC14", attribute = "CAPTURE_LOCATION", matching = unique(KKODC14.gcl$attributes$CAPTURE_LOCATION)[1:4])
+KKODC14IDs <- list(na.omit(KKODC14IDs))
+names(KKODC14IDs) <- "KKODC14"
+
+# Pool Chignik and South Pen fish
+PoolCollections.GCL(collections = "KKODC14", loci = loci48, IDs = KKODC14IDs, newname = "KMA2014")
+str(KMA2014.gcl)
+
+table(KMA2014.gcl$attributes$CAPTURE_LOCATION, KMA2014.gcl$attributes$MESH_SIZE_COMMENT)
+
+#~~~~~~~~~~~~~~~~~~
+## Kodiak 2015
+KMA2015
+str(KKODC15.gcl)
+sapply(KMA2015, function(silly) {table(get(paste(silly, ".gcl", sep = ''))$attributes$CAPTURE_LOCATION)})
+
+# Pool Chignik and South Pen fish
+PoolCollections.GCL(collections = KMA2015, loci = loci48, IDs = NULL, newname = "KMA2015")
+str(KMA2015.gcl)
+
+table(KMA2015.gcl$attributes$CAPTURE_LOCATION, KMA2015.gcl$attributes$MESH_SIZE_COMMENT)
 
 
-## Function to define strata by dates (date.df)
+KMA2015.gcl$attributes$MESH_SIZE_COMMENT <- gsub(pattern = "E", replacement = "Early", x = KMA2015.gcl$attributes$MESH_SIZE_COMMENT)
+KMA2015.gcl$attributes$MESH_SIZE_COMMENT <- gsub(pattern = "L", replacement = "Late", x = KMA2015.gcl$attributes$MESH_SIZE_COMMENT)
 
-# # Inputs
-# silly <- "SKARLC14"
-# date.df <- KMA.Strata.Dates.2014KarlUganUyak
-# loci <- loci48
 
-PoolCollectionsByDateDF <- function(silly, date.df, loci) {
-  sapply(silly, function(mix) {
-    mix.dates <- unique(as.Date(get(paste(mix, ".gcl", sep = ''))$attributes$CAPTURE_DATE))
-    by(data = date.df, INDICES = date.df$Strata, function(x) {
-      IDs <- AttributesToIDs.GCL(silly = mix, attribute = "CAPTURE_DATE", matching = mix.dates[mix.dates >= x$Begin & mix.dates <= x$End])
-      IDs <- list(na.omit(IDs))
-      names(IDs) <- mix
-      PoolCollections.GCL(collections = mix, loci = loci, IDs = IDs, newname = paste(mix, as.character(x$Strata), sep = "_"))
-      list("First Last Fish" = range(as.numeric(unlist(IDs))), "n" = get(paste(mix, "_", as.character(x$Strata), ".gcl", sep = ''))$n)
-    } )
-  }, simplify = FALSE, USE.NAMES = TRUE)
+#~~~~~~~~~~~~~~~~~~
+# Dput these sillys for now
+dir.create("Raw genotypes/PoolingByYear")
+invisible(sapply(c("KMA2014", "KMA2015", "KSPENCHIG14"), function(silly) {dput(x = get(paste(silly, ".gcl", sep = '')), file = paste("Raw genotypes/PoolingByYear/" , silly, ".txt", sep = ''))} )); beep(8)
+
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Spatio temporal strata for 2014 Kodiak samples
+
+silly = "KMA2014"
+loci = loci48
+geostrata = cbind(object = unique(KMA2014.gcl$attributes$CAPTURE_LOCATION), nm = c("KALITC14", "KEASTC14", "KMAINC14", "KWESTC14"))
+tempstrata = cbind(object = unique(KMA2014.gcl$attributes$MESH_SIZE_COMMENT), nm = c("1_Early", "2_Late"))
+geostrata; tempstrata
+
+table(KMA2014.gcl$attributes$CAPTURE_LOCATION, KMA2014.gcl$attributes$MESH_SIZE_COMMENT)
+
+my.gcl <- get(paste(silly, ".gcl", sep = ''))
+for(i in seq(nrow(geostrata))) {
+  geo <- geostrata[i, ]
+  for(j in seq(nrow(tempstrata))) {
+    temp <- tempstrata[j, ]
+    
+    if(geo["object"] == "Mainland" & temp["object"] == "Early") {next}
+    
+    geoIDs <- AttributesToIDs.GCL(silly = silly, attribute = "CAPTURE_LOCATION", matching = geo["object"])
+    tempIDs <- AttributesToIDs.GCL(silly = silly, attribute = "MESH_SIZE_COMMENT", matching = temp["object"])
+    IDs <- geoIDs[geoIDs %in% tempIDs]
+    IDs <- list(na.omit(IDs))
+    names(IDs) <- silly
+    PoolCollections.GCL(collections = silly, loci = loci, IDs = IDs, newname = paste(geo["nm"], temp["nm"], sep = "_"))
+    print(get(paste(geo["nm"], "_", temp["nm"], ".gcl", sep = ''))$n)
+  }
 }
 
-# # Example
-# PoolCollectionsByDateDF(silly = LateAugustMixtures2014[c(1, 3)], date.df = KMA.Strata.Dates.2014KarlUganUyak, loci = loci48)
+grep(pattern = ".gcl", x = objects(pattern = "14_"), value = TRUE)
 
-PoolCollectionsByDateDF(silly = KMA2014[1], date.df = KMA.Strata.Dates.2014Alitak, loci = loci48)
-PoolCollectionsByDateDF(silly = KMA2014[2], date.df = KMA.Strata.Dates.2014Ayak, loci = loci48)
-PoolCollectionsByDateDF(silly = KMA2014[3:5], date.df = KMA.Strata.Dates.2014KarlUganUyak, loci = loci48)
-PoolCollectionsByDateDF(silly = KMA2015, date.df = KMA.Strata.Dates.2015, loci = loci48)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Spatio temporal strata for 2015 Kodiak samples
+silly = "KMA2015"
+loci = loci48
+geostrata = cbind(object = unique(KMA2015.gcl$attributes$CAPTURE_LOCATION), nm = c("KALITC15", "KEASTC15", "KWESTC15", "KMAINC15"))
+tempstrata = cbind(object = unique(KMA2015.gcl$attributes$MESH_SIZE_COMMENT), nm = c("2_Late", "1_Early"))
+geostrata; tempstrata
+
+table(KMA2015.gcl$attributes$CAPTURE_LOCATION, KMA2015.gcl$attributes$MESH_SIZE_COMMENT)
+
+my.gcl <- get(paste(silly, ".gcl", sep = ''))
+for(i in seq(nrow(geostrata))) {
+  geo <- geostrata[i, ]
+  for(j in seq(nrow(tempstrata))) {
+    temp <- tempstrata[j, ]
+    
+    if(geo["object"] == "Mainland" & temp["object"] == "Early") {next}
+    
+    geoIDs <- AttributesToIDs.GCL(silly = silly, attribute = "CAPTURE_LOCATION", matching = geo["object"])
+    tempIDs <- AttributesToIDs.GCL(silly = silly, attribute = "MESH_SIZE_COMMENT", matching = temp["object"])
+    IDs <- geoIDs[geoIDs %in% tempIDs]
+    IDs <- list(na.omit(IDs))
+    names(IDs) <- silly
+    PoolCollections.GCL(collections = silly, loci = loci, IDs = IDs, newname = paste(geo["nm"], temp["nm"], sep = "_"))
+    print(list("First Last Fish" = range(as.numeric(unlist(IDs))), "n" = get(paste(geo["nm"], "_", temp["nm"], ".gcl", sep = ''))$n))
+  }
+}
+
+grep(pattern = ".gcl", x = objects(pattern = "15_"), value = TRUE)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Mixture sillyvec
 KMA2014Strata <- unlist(strsplit(x = grep(pattern = "14_", x = objects(pattern = "\\.gcl"), value = TRUE), split = "\\.gcl"))
+KMA2014Strata <- KMA2014Strata[-5]
 KMA2015Strata <- unlist(strsplit(x = grep(pattern = "15_", x = objects(pattern = "\\.gcl"), value = TRUE), split = "\\.gcl"))
-KMA2014_2015Strata <- c(KMA2014Strata, KMA2015Strata)
+KMA2014_2015Strata <- c("KSPENCHIG14", KMA2014Strata, KMA2015Strata)
 
 dput(x = KMA2014Strata, file = "Objects/KMA2014Strata.txt")
 dput(x = KMA2015Strata, file = "Objects/KMA2015Strata.txt")
@@ -192,7 +288,10 @@ samp.df.2015 <- data.frame(t(sapply(KMA2015Strata, function(strata) {
 })))
 cast(data = samp.df.2015, location ~ temporal.strata)
 
+
+
 # dput mixture sillys
+dir.create("Raw genotypes/OriginalCollections_Strata")
 invisible(sapply(KMA2014_2015Strata, function(silly) {dput(x = get(paste(silly, ".gcl", sep = '')), file = paste("Raw genotypes/OriginalCollections_Strata/" , silly, ".txt", sep = ''))} )); beep(8)
 
 
