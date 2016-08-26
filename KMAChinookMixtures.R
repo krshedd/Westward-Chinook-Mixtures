@@ -296,21 +296,51 @@ invisible(sapply(KMA2014_2015Strata, function(silly) {dput(x = get(paste(silly, 
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#### Data QC/Massage ####
+#### Clean workspace; dget .gcl objects and Locus Control ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+rm(list = ls(all = TRUE))
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures")
+# This sources all of the new GCL functions to this workspace
+source("C:/Users/krshedd/Documents/R/Functions.GCL.R")
+source("H:/R Source Scripts/Functions.GCL_KS.R")
+
+## Get objects
+LocusControl <- dget(file = "Objects/OriginalLocusControl48.txt")
+
+KMAobjects <- list.files(path = "Objects", recursive = FALSE)
+KMAobjects <- KMAobjects[!KMAobjects %in% c("OriginalLocusControl48.txt")]
+KMAobjects
+
+invisible(sapply(KMAobjects, function(objct) {assign(x = unlist(strsplit(x = objct, split = ".txt")), value = dget(file = paste(getwd(), "Objects", objct, sep = "/")), pos = 1) })); beep(2)
+
+
+## Get un-altered mixtures
+invisible(sapply(KMA2014_2015Strata, function(silly) {assign(x = paste(silly, ".gcl", sep = ""), value = dget(file = paste(getwd(), "/Raw genotypes/OriginalCollections_Strata/", silly, ".txt", sep = "")), pos = 1)} )); beep(2)
+objects(pattern = "\\.gcl")
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Data QC/Massage ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Confirm appropriate strata
+sapply(KMA2014_2015Strata, function(mix) {table(get(paste(mix, ".gcl", sep = ''))$attributes$CAPTURE_LOCATION,
+                                                get(paste(mix, ".gcl", sep = ''))$attributes$MESH_SIZE_COMMENT)})
+str(KSPENCHIG14.gcl)
+
+# Begin QC
 require(xlsx)
 
 KMA2014_2015Strata
 
-KMA2014_2015Strata_SampleSizes <- matrix(data = NA, nrow = length(KMA2014_2015Strata), ncol = 5, 
-                                         dimnames = list(KMA2014_2015Strata, c("Genotyped", "Alternate", "Missing", "Duplicate", "Final")))
+KMA2014_2015Strata_SampleSizes <- matrix(data = NA, nrow = length(KMA2014_2015Strata), ncol = 4, 
+                                         dimnames = list(KMA2014_2015Strata, c("Genotyped", "Missing", "Duplicate", "Final")))
 
 #### Check loci
 ## Get sample size by locus
 Original_KMA2014_2015Strata_SampleSizebyLocus <- SampSizeByLocus.GCL(sillyvec = KMA2014_2015Strata, loci = loci48)
-min(Original_KMA2014_2015Strata_SampleSizebyLocus)  ## 267/285
-apply(Original_KMA2014_2015Strata_SampleSizebyLocus, 1, min) / apply(Original_KMA2014_2015Strata_SampleSizebyLocus, 1, max)  ## Good, 0.947
+min(Original_KMA2014_2015Strata_SampleSizebyLocus)  ## 264
+apply(Original_KMA2014_2015Strata_SampleSizebyLocus, 1, min) / apply(Original_KMA2014_2015Strata_SampleSizebyLocus, 1, max)  # Good, all > 0.9
 
 Original_KMA2014_2015Strata_PercentbyLocus <- apply(Original_KMA2014_2015Strata_SampleSizebyLocus, 1, function(row) {row / max(row)} )
 which(apply(Original_KMA2014_2015Strata_PercentbyLocus, 2, min) < 0.8)  # no re-runs!
@@ -390,25 +420,13 @@ Original_KMA2014_2015Strata_ColSize <- sapply(paste(KMA2014_2015Strata, ".gcl", 
 KMA2014_2015Strata_SampleSizes[, "Genotyped"] <- Original_KMA2014_2015Strata_ColSize
 
 
-### Alternate
-## Indentify alternate species individuals
-KMA2014_2015Strata_Alternate <- FindAlternateSpecies.GCL(sillyvec = KMA2014_2015Strata, species = "sockeye")
-
-## Remove Alternate species individuals
-RemoveAlternateSpecies.GCL(AlternateSpeciesReport = KMA2014_2015Strata_Alternate, AlternateCutOff = 0.5, FailedCutOff = 0.5)
-
-## Get number of individuals per silly after removing alternate species individuals
-ColSize_KMA2014_2015Strata_PostAlternate <- sapply(paste(KMA2014_2015Strata, ".gcl", sep = ''), function(x) get(x)$n)
-KMA2014_2015Strata_SampleSizes[, "Alternate"] <- Original_KMA2014_2015Strata_ColSize-ColSize_KMA2014_2015Strata_PostAlternate
-
-
 ### Missing
 ## Remove individuals with >20% missing data
 KMA2014_2015Strata_MissLoci <- RemoveIndMissLoci.GCL(sillyvec = KMA2014_2015Strata, proportion = 0.8)
 
 ## Get number of individuals per silly after removing missing loci individuals
 ColSize_KMA2014_2015Strata_PostMissLoci <- sapply(paste(KMA2014_2015Strata, ".gcl", sep = ''), function(x) get(x)$n)
-KMA2014_2015Strata_SampleSizes[, "Missing"] <- ColSize_KMA2014_2015Strata_PostAlternate-ColSize_KMA2014_2015Strata_PostMissLoci
+KMA2014_2015Strata_SampleSizes[, "Missing"] <- Original_KMA2014_2015Strata_ColSize-ColSize_KMA2014_2015Strata_PostMissLoci
 
 
 ### Duplicate
@@ -429,5 +447,252 @@ KMA2014_2015Strata_SampleSizes[, "Duplicate"] <- ColSize_KMA2014_2015Strata_Post
 KMA2014_2015Strata_SampleSizes[, "Final"] <- ColSize_KMA2014_2015Strata_PostDuplicate
 KMA2014_2015Strata_SampleSizes
 
+dir.create("Output")
 write.xlsx(KMA2014_2015Strata_SampleSizes, file = "Output/KMA2014_2015Strata_SampleSizes.xlsx")
 dput(x = KMA2014_2015Strata_SampleSizes, file = "Objects/KMA2014_2015Strata_SampleSizes.txt")
+
+
+
+# dput postQC mixture sillys
+dir.create("Raw genotypes/OriginalCollections_Strata_PostQC")
+invisible(sapply(KMA2014_2015Strata, function(silly) {dput(x = get(paste(silly, ".gcl", sep = '')), file = paste("Raw genotypes/OriginalCollections_Strata_PostQC/" , silly, ".txt", sep = ''))} )); beep(8)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Clean workspace; dget .gcl objects and Locus Control ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+rm(list = ls(all = TRUE))
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures")
+# This sources all of the new GCL functions to this workspace
+source("C:/Users/krshedd/Documents/R/Functions.GCL.R")
+source("H:/R Source Scripts/Functions.GCL_KS.R")
+
+## Get objects
+LocusControl <- dget(file = "Objects/OriginalLocusControl48.txt")
+
+KMAobjects <- list.files(path = "Objects", recursive = FALSE)
+KMAobjects <- KMAobjects[!KMAobjects %in% c("OriginalLocusControl48.txt")]
+KMAobjects
+
+invisible(sapply(KMAobjects, function(objct) {assign(x = unlist(strsplit(x = objct, split = ".txt")), value = dget(file = paste(getwd(), "Objects", objct, sep = "/")), pos = 1) })); beep(2)
+
+
+## Get un-altered mixtures
+invisible(sapply(KMA2014_2015Strata, function(silly) {assign(x = paste(silly, ".gcl", sep = ""), value = dget(file = paste(getwd(), "/Raw genotypes/OriginalCollections_Strata_PostQC/", silly, ".txt", sep = "")), pos = 1)} )); beep(2)
+objects(pattern = "\\.gcl")
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Get/Create MSA Objects ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Baseline/Objects")
+
+colors10 <- dget(file = "colors10.txt")
+groups10 <- dget(file = "groups10.txt")
+groups10short <- dget(file = "groups10short.txt")
+groupvec10 <- dget(file = "groupvec10.txt")
+KMA211Pops <- dget(file = "KMA211Pops.txt")
+KMA211Pops42Loci.baseline <- dget(file = "KMA211Pops42Loci.baseline.txt")
+loci42 <- dget(file = "loci42.txt")
+popnames211 <- dget(file = "popnames211.txt")
+
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Objects")
+
+dput(x = colors10, file = "colors10.txt")
+dput(x = groups10, file = "groups10.txt")
+dput(x = groups10short, file = "groups10short.txt")
+dput(x = groupvec10, file = "groupvec10.txt")
+dput(x = KMA211Pops, file = "KMA211Pops.txt")
+dput(x = KMA211Pops42Loci.baseline, file = "KMA211Pops42Loci.baseline.txt")
+dput(x = loci42, file = "loci42.txt")
+dput(x = popnames211, file = "popnames211.txt")
+
+# Starting with a Regionally flat prior, then rolling prior afterwards
+KMA211Pops10FlatPrior <- Prior.GCL(groupvec = groupvec10, groupweights = rep(1 / 10, 10), minval = 0.01)
+dput(x = KMA211Pops10FlatPrior, file = "KMA211Pops10FlatPrior.txt")
+
+# Initial values
+KMA211PopsInits <- MultiChainInits.GCL(npops = length(KMA211Pops), nchains = 5, prop = 0.9)
+dput(x = KMA211PopsInits, file = "KMA211PopsInits.txt")
+
+# Seeds
+KMA211PopsChinookSeeds <- matrix(sample(seq(10000), 3 * 5), nrow = 3)
+dput(x = KMA211PopsChinookSeeds, file = "KMA211PopsChinookSeeds.txt")
+
+# Groups 2 Row
+groups10tworows <- c("Russia", "CWAK\nYukon", "North\nPen", "Chignik", "Kodiak", "Cook\nInlet", "Copper", "SEAK", "British\nColumbia", "West\nCoast US")
+dput(x = groups10tworows, file = "groups10tworows.txt")
+
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures")
+
+
+dir.create("BAYES")
+sapply(c("Baseline", "Control", "Mixture", "Output"), function(fldr) {dir.create(paste("BAYES", fldr, sep = "/"))})
+file.copy(from = "V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Baseline/BAYES/Baseline/KMA211Pops42Loci.bse", 
+          to = "BAYES/Baseline/KMA211Pops42Loci.bse")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Round 1 MSA files for BAYES 2014 Early Strata ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+KMA2014Strata_1_Early <- grep(pattern = "1_Early", x = KMA2014Strata, value = TRUE)
+Round1Mixtures_2014 <- c(KMA2014Strata_1_Early, "KMAINC14_2_Late", "KSPENCHIG14")
+dput(x = Round1Mixtures_2014, file = "Objects/Round1Mixtures_2014.txt")
+
+## Dumping Mixture files
+KMA21142MixtureFormat <- CreateMixture.GCL(sillys = KMA2014Strata_1_Early[1], loci = loci42, IDs = NULL, mixname = KMA2014Strata_1_Early[1],
+                                           dir = "BAYES/Mixture", type = "BAYES", PT = FALSE)
+dput(KMA21142MixtureFormat, file = "Objects/KMA21142MixtureFormat.txt")
+
+sapply(Round1Mixtures_2014, function(Mix) {CreateMixture.GCL(sillys = Mix, loci = loci42, IDs = NULL, mixname = Mix, dir = "BAYES/Mixture", type = "BAYES", PT = FALSE)} )
+
+## Dumping Control files
+sapply(Round1Mixtures_2014, function(Mix) {
+  CreateControlFile.GCL(sillyvec = KMA211Pops, loci = loci42, mixname = Mix, basename = "KMA211Pops42Loci", suffix = "", nreps = 40000, nchains = 5,
+                        groupvec = groupvec10, priorvec = KMA211Pops10FlatPrior, initmat = KMA211PopsInits, dir = "BAYES/Control",
+                        seeds = KMA211PopsChinookSeeds, thin = c(1, 1, 100), mixfortran = KMA21142MixtureFormat, basefortran = KMA211Pops42Loci.baseline, switches = "F T F T T T F")
+})
+
+## Create output directory
+sapply(Round1Mixtures_2014, function(Mix) {dir.create(paste("BAYES/Output/", Mix, sep = ""))})
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Go run BAYES
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Summarize Round 1 Output ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Round1Mixtures_2014_Estimates <- CustomCombineBAYESOutput.GCL(groupvec = seq(groups10), groupnames = groups10, 
+                                                              maindir = "BAYES/Output", mixvec = Round1Mixtures_2014, prior = "",  
+                                                              ext = "RGN", nchains = 5, burn = 0.5, alpha = 0.1, PosteriorOutput = TRUE)
+
+# Dput 1) estimates stats + posterior output & 2) estimates stats
+dir.create("Estimates objects")
+dput(Round1Mixtures_2014_Estimates, file = "Estimates objects/Round1Mixtures_2014_Estimates.txt")
+dput(Round1Mixtures_2014_Estimates$Stats, file = "Estimates objects/Round1Mixtures_2014_EstimatesStats.txt")
+
+Round1Mixtures_2014_Estimates <- dget(file = "Estimates objects/Round1Mixtures_2014_Estimates.txt")
+Round1Mixtures_2014_EstimatesStats <- dget(file = "Estimates objects/Round1Mixtures_2014_EstimatesStats.txt")
+
+
+# Verify that Gelman-Rubin < 1.2
+sapply(Round1Mixtures_2014_Estimates$Stats, function(Mix) {Mix[, "GR"]})
+sapply(Round1Mixtures_2014_Estimates$Stats, function(Mix) {table(Mix[, "GR"] > 1.2)})
+sapply(Round1Mixtures_2014, function(Mix) {
+  BarPlot <- barplot2(Round1Mixtures_2014_EstimatesStats[[Mix]][, "GR"], col = "blue", ylim = c(1, pmax(1.5, max(Round1Mixtures_2014_EstimatesStats[[Mix]][, "GR"]))), ylab = "Gelman-Rubin", type = "h", xpd = FALSE, main = Mix, names.arg = '')
+  abline(h = 1.2, lwd = 3, xpd = FALSE)
+  text(x = BarPlot, y = 1, labels = groups10tworows, srt = 0, pos = 1, xpd = TRUE, cex = 0.55)
+})
+
+# Quick look at raw posterior output
+str(Round1Mixtures_2014_Estimates$Output)
+Round1Mixtures_2014_Header <- setNames(object = c("Southwest Kodiak / Alitak Early June 1-July 5, 2014",
+                                                  "Eastside Kodiak Early June 1-July 5, 2014",
+                                                  "Westwide Kodiak Early June 1-July 5, 2014",
+                                                  "Mainland Kodiak Late July 6-August 5, 2014",
+                                                  "South Peninsula / Chignik June 1-August 5, 2014"), 
+                                       nm = Round1Mixtures_2014)
+dput(x = Round1Mixtures_2014_Header, file = "Objects/Round1Mixtures_2014_Header.txt")
+
+
+PlotPosterior <- function(mixvec = NULL, output, header = NULL, groups, colors = NULL, set.mfrow, thin = 10, chains = 5){
+  if(is.null(colors)) {colors <- rep("black", length(groups))}
+  if(is.null(mixvec)) {mixvec <- names(output)}
+  
+  par(mfrow = set.mfrow, mar = c(2.1, 2.1, 1.1, 1.1), oma = c(4.1, 4.1, 3.1, 1.1))
+  
+  invisible(sapply(mixvec, function(Mix) {
+    invisible(sapply(seq(groups), function(i) {
+      RG <- output[[Mix]][, i]
+      RG <- RG[seq(1, length(RG), thin)]
+      plot(RG, type = "l", ylim = c(0,1), xlab = "", ylab = "")
+      abline(v = seq(0, length(RG), length(RG)/chains), xpd = FALSE)
+      text(x = length(RG)/2, y = 0.96, labels = groups[i], col = colors[i], cex = 1.2, font = 2)} ))
+    if(prod(set.mfrow) - length(groups) == 1) {plot.new()}
+    if(prod(set.mfrow) - length(groups) == 2) {plot.new(); plot.new()}
+    if(!is.null(header)) {
+      mtext(text = header[Mix], side = 3, outer = TRUE, cex = 1.5)
+    } else {
+      mtext(text = Mix, side = 3, outer = TRUE, cex = 1.5)
+    }
+    mtext(text = paste("Iteration (", chains, " chain[s] each)", sep = ''), side = 1, outer = TRUE, cex = 1.5, line = 1.5)
+    mtext(text = "Posterior", side = 2, outer = TRUE, cex = 1.5, line = 1.5)
+  }))
+  
+  par(mfrow = c(1, 1), mar = c(5.1, 4.1, 4.1, 2.1), oma = c(0, 0, 0, 0))
+}
+dput(x = PlotPosterior, file = "Objects/PlotPosterior.txt")
+
+PlotPosterior(mixvec = Round1Mixtures_2014, output = Round1Mixtures_2014_Estimates$Output, 
+              groups = groups10, colors = colors10, 
+              header = Round1Mixtures_2014_Header, set.mfrow = c(5, 3), thin = 10)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Plot Round 1 Results ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Barplots
+QuickBarplot <- function(mixvec, estimatesstats, groups, groups2rows = NULL, header) {
+  while(!require(gplots, quietly = TRUE)){install.packages("gplots")}
+  
+  # if(is.null(groups2rows)) {groups2rows <- groups}
+  if(length(mixvec) != length(header)) {stop("Header is not the same length as mixvec!")}
+  for(i in seq(mixvec)) {
+    header[i] <- paste(header[i], "\nn = ", get(paste(mixvec[i], ".gcl", sep = ''))$n, sep = '')
+  }
+  if("Stats" %in% names(estimatesstats)) {estimatesstats <- estimatesstats$Stats}
+  
+  par(mfrow = c(1, 1), mar = c(3.1, 5.1, 4.1, 2.1), oma = rep(0, 4))
+  sapply(mixvec, function(Mix) {
+    Barplot <- barplot2(height = estimatesstats[[Mix]][, "median"] * 100,
+                        beside = TRUE, plot.ci = TRUE, ci.lwd = 1,
+                        ci.l = estimatesstats[[Mix]][, "5%"] * 100,
+                        ci.u = estimatesstats[[Mix]][, "95%"] * 100,
+                        ylim = c(0, 100), col = "blue", yaxt = 'n', xaxt = 'n',
+                        main = header[Mix], ylab = "Percent of Mixture", cex.lab = 2, cex.main = 2)
+    axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = 1.5)
+    abline(h = 0, xpd = FALSE)
+    
+    if(is.null(groups2rows)) {
+      text(x = Barplot[, 1], y = -1, labels = groups, srt = 90, adj =  1, xpd = TRUE, cex = 0.5)
+    } else {
+      mtext(text = groups2rows, side = 1, line = 1, at = Barplot[, 1], adj = 0.5, cex = 0.6)
+    }
+  })
+  par(mar = c(5.1, 4.1, 4.1, 2.1))
+}
+
+dput(x = QuickBarplot, file = "Objects/QuickBarplot.txt")
+
+QuickBarplot(mixvec = Round1Mixtures_2014, estimatesstats = Round1Mixtures_2014_Estimates, groups = groups10, groups2rows = groups10tworows, header = Round1Mixtures_2014_Header)
+
+
+## Make violin plots of posteriors with RGs sorted
+
+ViolinPlot <- function(mixvec = NULL, estimates, groups, colors, header, wex = 1, thin = 10) {
+  while(!require(vioplot, quietly = TRUE)){install.packages("vioplot")}
+  
+  if(is.null(mixvec)) {mixvec <- names(estimates$Stats)}
+  
+  par(mar = c(5.6, 4.6, 3.6, 1.1))
+  sapply(mixvec, function(Mix) {
+    plot(estimates$Stats[[Mix]][, "median"], cex = 3, pch = 16, col = colors, ylab = "Proportion of Mixture", ylim = c(0, 1), xlab = "", axes = FALSE, main = header[[Mix]], cex.main = 2, cex.lab = 1.5)
+    sapply(seq(groups), function(i) {vioplot2(estimates$Output[[Mix]][seq(from = 1, to = nrow(estimates$Output[[Mix]]), by = thin), i], at = i, horizontal = FALSE, col = colors[i], border = TRUE, drawRect = FALSE, rectCol = colors[i], add = TRUE, wex = wex, lwd = 2)})
+    arrows(x0 = seq(groups), y0 = estimates$Stats[[Mix]][, "5%"], x1 = seq(groups), y1 = estimates$Stats[[Mix]][, "95%"], angle = 90, code = 3, length = 0.2, lwd = 2)
+    points(estimates$Stats[[Mix]][, "median"], cex = 2, pch = 21, col = "white", bg = colors, lwd = 3)
+    axis(side = 2, lwd = 3, cex.axis = 1.5)
+    text(x = (seq(groups)) - 0.35, y = 0, labels = groups, srt = 60, pos = 1, offset = 2.5, xpd = TRUE)
+    axis(side = 1, labels = NA, at = seq(groups), pos = 0, lwd = 2, tick = FALSE)
+    abline(h = 0, lwd = 3, xpd = FALSE)
+  } )
+  
+}
+
+dput(x = ViolinPlot, file = "Objects/ViolinPlot.txt")
+
+ViolinPlot(estimates = Round1Mixtures_2014_Estimates, groups = groups10tworows, colors = colors10, header = Round1Mixtures_2014_Header)
+rm(Round1Mixtures_2014_Estimates)
