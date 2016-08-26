@@ -77,7 +77,7 @@ dput(x = mito.loci48, file = "Objects/mito.loci48.txt")
 #~~~~~~~~~~~~~~~~~~
 ## Pull all data for each silly code and create .gcl objects for each
 LOKI2R.GCL(sillyvec = c(KMA2014, KMA2015, SPEN2014), username = username, password = password)
-# sapply(c(KMA2014, KMA2015, SPEN2014), function(silly) {LOKI2R.GCL(sillyvec = silly, username = username, password = password)} )  # looping through due to heap space error when getting all sillys at once
+
 rm(username, password)
 objects(pattern = "\\.gcl")
 
@@ -536,7 +536,7 @@ file.copy(from = "V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harves
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### Round 1 MSA files for BAYES 2014 Early Strata ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+# Indetify Strata to Run
 KMA2014Strata_1_Early <- grep(pattern = "1_Early", x = KMA2014Strata, value = TRUE)
 Round1Mixtures_2014 <- c(KMA2014Strata_1_Early, "KMAINC14_2_Late", "KSPENCHIG14")
 dput(x = Round1Mixtures_2014, file = "Objects/Round1Mixtures_2014.txt")
@@ -583,6 +583,7 @@ Round1Mixtures_2014_EstimatesStats <- dget(file = "Estimates objects/Round1Mixtu
 # Verify that Gelman-Rubin < 1.2
 sapply(Round1Mixtures_2014_Estimates$Stats, function(Mix) {Mix[, "GR"]})
 sapply(Round1Mixtures_2014_Estimates$Stats, function(Mix) {table(Mix[, "GR"] > 1.2)})
+require(gplots)
 sapply(Round1Mixtures_2014, function(Mix) {
   BarPlot <- barplot2(Round1Mixtures_2014_EstimatesStats[[Mix]][, "GR"], col = "blue", ylim = c(1, pmax(1.5, max(Round1Mixtures_2014_EstimatesStats[[Mix]][, "GR"]))), ylab = "Gelman-Rubin", type = "h", xpd = FALSE, main = Mix, names.arg = '')
   abline(h = 1.2, lwd = 3, xpd = FALSE)
@@ -630,7 +631,7 @@ dput(x = PlotPosterior, file = "Objects/PlotPosterior.txt")
 
 PlotPosterior(mixvec = Round1Mixtures_2014, output = Round1Mixtures_2014_Estimates$Output, 
               groups = groups10, colors = colors10, 
-              header = Round1Mixtures_2014_Header, set.mfrow = c(5, 3), thin = 10)
+              header = Round1Mixtures_2014_Header, set.mfrow = c(5, 2), thin = 10)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### Plot Round 1 Results ####
@@ -681,7 +682,7 @@ ViolinPlot <- function(mixvec = NULL, estimates, groups, colors, header, wex = 1
   par(mar = c(5.6, 4.6, 3.6, 1.1))
   sapply(mixvec, function(Mix) {
     plot(estimates$Stats[[Mix]][, "median"], cex = 3, pch = 16, col = colors, ylab = "Proportion of Mixture", ylim = c(0, 1), xlab = "", axes = FALSE, main = header[[Mix]], cex.main = 2, cex.lab = 1.5)
-    sapply(seq(groups), function(i) {vioplot2(estimates$Output[[Mix]][seq(from = 1, to = nrow(estimates$Output[[Mix]]), by = thin), i], at = i, horizontal = FALSE, col = colors[i], border = TRUE, drawRect = FALSE, rectCol = colors[i], add = TRUE, wex = wex, lwd = 2)})
+    sapply(seq(groups), function(i) {vioplot(estimates$Output[[Mix]][seq(from = 1, to = nrow(estimates$Output[[Mix]]), by = thin), i], at = i, horizontal = FALSE, col = colors[i], border = TRUE, drawRect = FALSE, rectCol = colors[i], add = TRUE, wex = wex, lwd = 2)})
     arrows(x0 = seq(groups), y0 = estimates$Stats[[Mix]][, "5%"], x1 = seq(groups), y1 = estimates$Stats[[Mix]][, "95%"], angle = 90, code = 3, length = 0.2, lwd = 2)
     points(estimates$Stats[[Mix]][, "median"], cex = 2, pch = 21, col = "white", bg = colors, lwd = 3)
     axis(side = 2, lwd = 3, cex.axis = 1.5)
@@ -696,3 +697,89 @@ dput(x = ViolinPlot, file = "Objects/ViolinPlot.txt")
 
 ViolinPlot(estimates = Round1Mixtures_2014_Estimates, groups = groups10tworows, colors = colors10, header = Round1Mixtures_2014_Header)
 rm(Round1Mixtures_2014_Estimates)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Round 2 MSA files for BAYES 2014 Late Strata ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Indetify Strata to Run
+KMA2014Strata_2_Late <- grep(pattern = "2_Late", x = KMA2014Strata, value = TRUE)
+Round2Mixtures_2014 <- KMA2014Strata_2_Late[-which(KMA2014Strata_2_Late == "KMAINC14_2_Late")]  # remove mainland late, as already done
+dput(x = Round2Mixtures_2014, file = "Objects/Round2Mixtures_2014.txt")
+
+# Create rolling prior based on Round 1 estimates
+Round2Mixtures_2014_Prior <- sapply(Round1Mixtures_2014_EstimatesStats[1:3], function(Mix) {Prior.GCL(groupvec = groupvec10, groupweights = Mix[, "mean"], minval = 0.01)}, simplify = FALSE)
+names(Round2Mixtures_2014_Prior) <- gsub(pattern = "1_Early", replacement = "2_Late", x = names(Round2Mixtures_2014_Prior))  # This changes the names
+dput(x = Round2Mixtures_2014_Prior, file = "Objects/Round2Mixtures_2014_Prior.txt")
+str(Round2Mixtures_2014_Prior)
+
+
+## Dumping Mixture files
+sapply(Round2Mixtures_2014, function(Mix) {CreateMixture.GCL(sillys = Mix, loci = loci42, IDs = NULL, mixname = Mix, dir = "BAYES/Mixture", type = "BAYES", PT = FALSE)} )
+
+## Dumping Control files
+sapply(Round2Mixtures_2014, function(Mix) {
+  CreateControlFile.GCL(sillyvec = KMA211Pops, loci = loci42, mixname = Mix, basename = "KMA211Pops42Loci", suffix = "", nreps = 40000, nchains = 5,
+                        groupvec = groupvec10, priorvec = Round2Mixtures_2014_Prior[[Mix]], initmat = KMA211PopsInits, dir = "BAYES/Control",
+                        seeds = KMA211PopsChinookSeeds, thin = c(1, 1, 100), mixfortran = KMA21142MixtureFormat, basefortran = KMA211Pops42Loci.baseline, switches = "F T F T T T F")
+})
+
+## Create output directory
+sapply(Round2Mixtures_2014, function(Mix) {dir.create(paste("BAYES/Output/", Mix, sep = ""))})
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Go run BAYES
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Summarize Round 2 Output ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Round2Mixtures_2014_Estimates <- CustomCombineBAYESOutput.GCL(groupvec = seq(groups10), groupnames = groups10, 
+                                                              maindir = "BAYES/Output", mixvec = Round2Mixtures_2014, prior = "",  
+                                                              ext = "RGN", nchains = 5, burn = 0.5, alpha = 0.1, PosteriorOutput = TRUE)
+
+# Dput 1) estimates stats + posterior output & 2) estimates stats
+dir.create("Estimates objects")
+dput(Round2Mixtures_2014_Estimates, file = "Estimates objects/Round2Mixtures_2014_Estimates.txt")
+dput(Round2Mixtures_2014_Estimates$Stats, file = "Estimates objects/Round2Mixtures_2014_EstimatesStats.txt")
+
+Round2Mixtures_2014_Estimates <- dget(file = "Estimates objects/Round2Mixtures_2014_Estimates.txt")
+Round2Mixtures_2014_EstimatesStats <- dget(file = "Estimates objects/Round2Mixtures_2014_EstimatesStats.txt")
+
+
+# Verify that Gelman-Rubin < 1.2
+sapply(Round2Mixtures_2014_Estimates$Stats, function(Mix) {Mix[, "GR"]})
+sapply(Round2Mixtures_2014_Estimates$Stats, function(Mix) {table(Mix[, "GR"] > 1.2)})
+require(gplots)
+sapply(Round2Mixtures_2014, function(Mix) {
+  BarPlot <- barplot2(Round2Mixtures_2014_EstimatesStats[[Mix]][, "GR"], col = "blue", ylim = c(1, pmax(1.5, max(Round2Mixtures_2014_EstimatesStats[[Mix]][, "GR"]))), ylab = "Gelman-Rubin", type = "h", xpd = FALSE, main = Mix, names.arg = '')
+  abline(h = 1.2, lwd = 3, xpd = FALSE)
+  text(x = BarPlot, y = 1, labels = groups10tworows, srt = 0, pos = 1, xpd = TRUE, cex = 0.55)
+})
+
+# Quick look at raw posterior output
+str(Round2Mixtures_2014_Estimates$Output)
+Round2Mixtures_2014_Header <- setNames(object = c("Southwest Kodiak / Alitak Late June 1-July 5, 2014",
+                                                  "Eastside Kodiak Late June 1-July 5, 2014",
+                                                  "Westwide Kodiak Late June 1-July 5, 2014",
+                                                  "Mainland Kodiak Late July 6-August 5, 2014",
+                                                  "South Peninsula / Chignik June 1-August 5, 2014"), 
+                                       nm = Round2Mixtures_2014)
+dput(x = Round2Mixtures_2014_Header, file = "Objects/Round2Mixtures_2014_Header.txt")
+
+
+PlotPosterior(mixvec = Round2Mixtures_2014, output = Round2Mixtures_2014_Estimates$Output, 
+              groups = groups10, colors = colors10, 
+              header = Round2Mixtures_2014_Header, set.mfrow = c(5, 2), thin = 10)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Plot Round 2 Results ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Barplots
+QuickBarplot(mixvec = Round2Mixtures_2014, estimatesstats = Round2Mixtures_2014_Estimates, groups = groups10, groups2rows = groups10tworows, header = Round2Mixtures_2014_Header)
+
+## Make violin plots of posteriors with RGs sorted
+ViolinPlot(estimates = Round2Mixtures_2014_Estimates, groups = groups10tworows, colors = colors10, header = Round2Mixtures_2014_Header)
+rm(Round2Mixtures_2014_Estimates)
