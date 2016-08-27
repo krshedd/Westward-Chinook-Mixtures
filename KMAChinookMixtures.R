@@ -741,7 +741,6 @@ Round2Mixtures_2014_Estimates <- CustomCombineBAYESOutput.GCL(groupvec = seq(gro
                                                               ext = "RGN", nchains = 5, burn = 0.5, alpha = 0.1, PosteriorOutput = TRUE)
 
 # Dput 1) estimates stats + posterior output & 2) estimates stats
-dir.create("Estimates objects")
 dput(Round2Mixtures_2014_Estimates, file = "Estimates objects/Round2Mixtures_2014_Estimates.txt")
 dput(Round2Mixtures_2014_Estimates$Stats, file = "Estimates objects/Round2Mixtures_2014_EstimatesStats.txt")
 
@@ -761,11 +760,9 @@ sapply(Round2Mixtures_2014, function(Mix) {
 
 # Quick look at raw posterior output
 str(Round2Mixtures_2014_Estimates$Output)
-Round2Mixtures_2014_Header <- setNames(object = c("Southwest Kodiak / Alitak Late June 1-July 5, 2014",
-                                                  "Eastside Kodiak Late June 1-July 5, 2014",
-                                                  "Westwide Kodiak Late June 1-July 5, 2014",
-                                                  "Mainland Kodiak Late July 6-August 5, 2014",
-                                                  "South Peninsula / Chignik June 1-August 5, 2014"), 
+Round2Mixtures_2014_Header <- setNames(object = c("Southwest Kodiak / Alitak Late July 6-August 5, 2014",
+                                                  "Eastside Kodiak Late July 6-August 5, 2014",
+                                                  "Westwide Kodiak Late July 6-August 5, 2014"), 
                                        nm = Round2Mixtures_2014)
 dput(x = Round2Mixtures_2014_Header, file = "Objects/Round2Mixtures_2014_Header.txt")
 
@@ -783,3 +780,104 @@ QuickBarplot(mixvec = Round2Mixtures_2014, estimatesstats = Round2Mixtures_2014_
 ## Make violin plots of posteriors with RGs sorted
 ViolinPlot(estimates = Round2Mixtures_2014_Estimates, groups = groups10tworows, colors = colors10, header = Round2Mixtures_2014_Header)
 rm(Round2Mixtures_2014_Estimates)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Round 1 MSA files for BAYES 2015 Early Strata ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+require(reshape)
+samp.df.2015 <- data.frame(t(sapply(KMA2015Strata, function(strata) {
+  location <- unlist(strsplit(x = strata, split = "_"))[1]
+  temporal.strata <- as.numeric(unlist(strsplit(x = strata, split = "_"))[2])
+  n <- get(paste(strata, ".gcl", sep = ""))$n
+  c(location = location, temporal.strata = temporal.strata, n = n)
+})))
+cast(data = samp.df.2015, location ~ temporal.strata)
+
+# Indetify Strata to Run
+KMA2015Strata_1_Early <- grep(pattern = "1_Early", x = KMA2015Strata, value = TRUE)
+Round1Mixtures_2015 <- c(KMA2015Strata_1_Early, "KMAINC15_2_Late")
+dput(x = Round1Mixtures_2015, file = "Objects/Round1Mixtures_2015.txt")
+
+# Create rolling prior based on 2014 Round 1 estimates
+Round1Mixtures_2014_EstimatesStats <- dget(file = "Estimates objects/Round1Mixtures_2014_EstimatesStats.txt")
+
+Round1Mixtures_2015_Prior <- sapply(Round1Mixtures_2014_EstimatesStats[1:4], function(Mix) {
+  Prior.GCL(groupvec = groupvec10, groupweights = Mix[, "mean"], minval = 0.01)}, simplify = FALSE)
+names(Round1Mixtures_2015_Prior) <- gsub(pattern = "C14", replacement = "C15", x = names(Round1Mixtures_2015_Prior))  # This changes the names
+dput(x = Round1Mixtures_2015_Prior, file = "Objects/Round1Mixtures_2015_Prior.txt")
+str(Round1Mixtures_2015_Prior)
+
+# Verify
+sapply(Round1Mixtures_2015, function(geomix) {plot(as.vector(Round1Mixtures_2015_Prior[[geomix]]), type = "h", main = geomix)})
+
+## Dumping Mixture files
+sapply(Round1Mixtures_2015, function(Mix) {CreateMixture.GCL(sillys = Mix, loci = loci42, IDs = NULL, mixname = Mix, dir = "BAYES/Mixture", type = "BAYES", PT = FALSE)} )
+
+## Dumping Control files
+sapply(Round1Mixtures_2015, function(Mix) {
+  CreateControlFile.GCL(sillyvec = KMA211Pops, loci = loci42, mixname = Mix, basename = "KMA211Pops42Loci", suffix = "", nreps = 40000, nchains = 5,
+                        groupvec = groupvec10, priorvec = Round1Mixtures_2015_Prior[[Mix]], initmat = KMA211PopsInits, dir = "BAYES/Control",
+                        seeds = KMA211PopsChinookSeeds, thin = c(1, 1, 100), mixfortran = KMA21142MixtureFormat, basefortran = KMA211Pops42Loci.baseline, switches = "F T F T T T F")
+})
+
+## Create output directory
+sapply(Round1Mixtures_2015, function(Mix) {dir.create(paste("BAYES/Output/", Mix, sep = ""))})
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Go run BAYES
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Summarize Round 1 2015 Output ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Round1Mixtures_2015_Estimates <- CustomCombineBAYESOutput.GCL(
+  groupvec = seq(groups10), groupnames = groups10 ,
+  maindir = "BAYES/Output", 
+  mixvec = Round1Mixtures_2015, prior = "",  
+  ext = "RGN", nchains = 5, burn = 0.5, alpha = 0.1, PosteriorOutput = TRUE)
+
+# Dput 1) estimates stats + posterior output & 2) estimates stats
+dput(Round1Mixtures_2015_Estimates, file = "Estimates objects/Round1Mixtures_2015_Estimates.txt")
+dput(Round1Mixtures_2015_Estimates$Stats, file = "Estimates objects/Round1Mixtures_2015_EstimatesStats.txt")
+
+Round1Mixtures_2015_Estimates <- dget(file = "Estimates objects/Round1Mixtures_2015_Estimates.txt")
+Round1Mixtures_2015_EstimatesStats <- dget(file = "Estimates objects/Round1Mixtures_2015_EstimatesStats.txt")
+
+
+# Verify that Gelman-Rubin < 1.2
+sapply(Round1Mixtures_2015_Estimates$Stats, function(Mix) {Mix[, "GR"]})
+sapply(Round1Mixtures_2015_Estimates$Stats, function(Mix) {table(Mix[, "GR"] > 1.2)})
+require(gplots)
+par(mfrow = c(1, 1), mar = c(3.1, 4.6, 3.1, 1.1), oma = rep(0, 4))
+sapply(Round1Mixtures_2015, function(Mix) {
+  BarPlot <- barplot2(Round1Mixtures_2015_EstimatesStats[[Mix]][, "GR"], col = "blue", ylim = c(1, pmax(1.5, max(Round1Mixtures_2015_EstimatesStats[[Mix]][, "GR"]))), ylab = "Gelman-Rubin", xpd = FALSE, main = Mix, names.arg = '', cex.lab = 1.5, cex.main = 2)
+  abline(h = 1.2, lwd = 3, xpd = FALSE)
+  text(x = BarPlot, y = 1, labels = KMA14GroupsPC2Rows, srt = 0, pos = 1, xpd = TRUE, cex = 0.55)
+})
+
+# Quick look at raw posterior output
+str(Round1Mixtures_2015_Estimates$Output)
+Round1Mixtures_2015_Header <- setNames(object = c("Southwest Kodiak / Alitak Early June 1-July 5, 2015",
+                                                  "Eastside Kodiak Early June 1-July 5, 2015",
+                                                  "Westwide Kodiak Early June 1-July 5, 2015",
+                                                  "Mainland Kodiak Late July 6-August 5, 2015"), 
+                                       nm = Round1Mixtures_2014)
+dput(x = Round1Mixtures_2015_Header, file = "Objects/Round1Mixtures_2015_Header.txt")
+
+PlotPosterior(mixvec = Round1Mixtures_2015, output = Round1Mixtures_2015_Estimates$Output, 
+              groups = KMA14GroupsPC, colors = KMA14Colors, 
+              header = Round1Mixtures_2015_Header, set.mfrow = c(5, 3), thin = 10)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Plot Round 1 2015 Results ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Quick barplot
+QuickBarplot(mixvec = Round1Mixtures_2015, estimatesstats = Round1Mixtures_2015_Estimates, groups = KMA14GroupsPC, groups2rows = KMA14GroupsPC2Rows, header = Round1Mixtures_2015_Header)
+
+## Make violin plots of posteriors with RGs sorted
+ViolinPlot(mixvec = Round1Mixtures_2015, estimates = Round1Mixtures_2015_Estimates, groups = KMA14GroupsPC2Rows, colors = KMA14Colors, header = Round1Mixtures_2015_Header)
+rm(Round1Mixtures_2015_Estimates)
