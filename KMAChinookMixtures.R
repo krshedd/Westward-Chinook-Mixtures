@@ -899,7 +899,6 @@ names(Round2Mixtures_2015_Prior) <- gsub(pattern = "1_Early", replacement = "2_L
 dput(x = Round2Mixtures_2015_Prior, file = "Objects/Round2Mixtures_2015_Prior.txt")
 str(Round2Mixtures_2015_Prior)
 
-# silly change
 ## Dumping Mixture files
 sapply(Round2Mixtures_2015, function(Mix) {CreateMixture.GCL(sillys = Mix, loci = loci42, IDs = NULL, mixname = Mix, dir = "BAYES/Mixture", type = "BAYES", PT = FALSE)} )
 
