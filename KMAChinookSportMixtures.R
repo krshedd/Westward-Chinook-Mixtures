@@ -501,3 +501,7 @@ QuickBarplot(mixvec = "KMARS15", estimatesstats = KMARS15_EstimatesStats, groups
 ## Make violin plots of posteriors with RGs sorted
 ViolinPlot(estimates = KMARS15_Estimates, groups = groups10tworows, colors = colors10, header = KMARS15_Header)
 rm(KMARS15_Estimates)
+
+# Are 2014 and 2015 different?
+KMARS14vs15 <- compare_comps_between.GCL(mixnames = c("KMARS14", "KMARS15"), groupnames = groups10, mixdir = "BAYES/Output")
+str(KMARS14vs15)
