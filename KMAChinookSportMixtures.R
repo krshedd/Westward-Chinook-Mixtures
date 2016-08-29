@@ -375,24 +375,24 @@ KMARS14_Estimates <- CustomCombineBAYESOutput.GCL(groupvec = seq(groups10), grou
 
 # Dput 1) estimates stats + posterior output & 2) estimates stats
 dir.create("Estimates objects")
-dput(KMARS14_2014_Estimates, file = "Estimates objects/KMARS14_2014_Estimates.txt")
-dput(KMARS14_2014_Estimates$Stats, file = "Estimates objects/KMARS14_2014_EstimatesStats.txt")
+dput(KMARS14_Estimates, file = "Estimates objects/KMARS14_Estimates.txt")
+dput(KMARS14_Estimates$Stats, file = "Estimates objects/KMARS14_EstimatesStats.txt")
 
-KMARS14_2014_Estimates <- dget(file = "Estimates objects/KMARS14_2014_Estimates.txt")
-KMARS14_2014_EstimatesStats <- dget(file = "Estimates objects/KMARS14_2014_EstimatesStats.txt")
+KMARS14_Estimates <- dget(file = "Estimates objects/KMARS14_Estimates.txt")
+KMARS14_EstimatesStats <- dget(file = "Estimates objects/KMARS14_EstimatesStats.txt")
 
 
 # Verify that Gelman-Rubin < 1.2
-KMARS14_2014_Estimates$Stats[, "GR"]
-table(KMARS14_2014_Estimates$Stats[, "GR"] > 1.2)
-sapply(KMARS14_2014, function(Mix) {
-  BarPlot <- barplot2(KMARS14_2014_EstimatesStats[[Mix]][, "GR"], col = "blue", ylim = c(1, pmax(1.5, max(KMARS14_2014_EstimatesStats[[Mix]][, "GR"]))), ylab = "Gelman-Rubin", type = "h", xpd = FALSE, main = Mix, names.arg = '')
+KMARS14_Estimates$Stats$KMARS14[, "GR"]
+table(KMARS14_Estimates$Stats$KMARS14[, "GR"] > 1.2)
+sapply("KMARS14", function(Mix) {
+  BarPlot <- barplot2(KMARS14_EstimatesStats[[Mix]][, "GR"], col = "blue", ylim = c(1, pmax(1.5, max(KMARS14_EstimatesStats[[Mix]][, "GR"]))), ylab = "Gelman-Rubin", type = "h", xpd = FALSE, main = Mix, names.arg = '')
   abline(h = 1.2, lwd = 3, xpd = FALSE)
   text(x = BarPlot, y = 1, labels = groups10tworows, srt = 0, pos = 1, xpd = TRUE, cex = 0.55)
 })
 
 # Quick look at raw posterior output
-str(KMARS14_2014_Estimates$Output)
+str(KMARS14_Estimates$Output)
 KMARS14_Header <- setNames(object = c("Kodiak Sport April 16-August 29, 2014"), 
                                        nm = "KMARS14")
 dput(x = KMARS14_Header, file = "Objects/KMARS14_Header.txt")
@@ -400,7 +400,7 @@ dput(x = KMARS14_Header, file = "Objects/KMARS14_Header.txt")
 file.copy(from = "V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Objects/PlotPosterior.txt",
           to = "Objects/PlotPosterior.txt")
 
-PlotPosterior(mixvec = KMARS14_2014, output = KMARS14_2014_Estimates$Output, 
+PlotPosterior(mixvec = "KMARS14", output = KMARS14_Estimates$Output, 
               groups = groups10, colors = colors10, 
               header = KMARS14_Header, set.mfrow = c(5, 2), thin = 10)
 
@@ -411,7 +411,7 @@ PlotPosterior(mixvec = KMARS14_2014, output = KMARS14_2014_Estimates$Output,
 file.copy(from = "V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Objects/QuickBarplot.txt",
           to = "Objects/QuickBarplot.txt")
 
-QuickBarplot(mixvec = KMARS14_2014, estimatesstats = KMARS14_2014_Estimates, groups = groups10, groups2rows = groups10tworows, header = KMARS14_Header)
+QuickBarplot(mixvec = "KMARS14", estimatesstats = KMARS14_Estimates, groups = groups10, groups2rows = groups10tworows, header = KMARS14_Header)
 
 
 ## Make violin plots of posteriors with RGs sorted
@@ -419,5 +419,97 @@ QuickBarplot(mixvec = KMARS14_2014, estimatesstats = KMARS14_2014_Estimates, gro
 file.copy(from = "V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Objects/ViolinPlot.txt",
           to = "Objects/ViolinPlot.txt")
 
-ViolinPlot(estimates = KMARS14_2014_Estimates, groups = groups10tworows, colors = colors10, header = KMARS14_Header)
-rm(KMARS14_2014_Estimates)
+ViolinPlot(estimates = KMARS14_Estimates, groups = groups10tworows, colors = colors10, header = KMARS14_Header)
+rm(KMARS14_Estimates)
+
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Round 2 MSA files for BAYES 2015 ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Create rolling prior based on 2014 Round 1 estimates
+KMARS14_EstimatesStats <- dget(file = "Estimates objects/KMARS14_EstimatesStats.txt")
+
+KMARS15_Prior <- sapply(KMARS14_EstimatesStats, function(Mix) {
+  Prior.GCL(groupvec = groupvec10, groupweights = Mix[, "mean"], minval = 0.01)}, simplify = FALSE)
+names(KMARS15_Prior) <- gsub(pattern = "S14", replacement = "S15", x = names(KMARS15_Prior))  # This changes the names
+dput(x = KMARS15_Prior, file = "Objects/KMARS15_Prior.txt")
+str(KMARS15_Prior)
+
+# Verify
+plot(as.vector(KMARS15_Prior[["KMARS15"]]), type = "h", main = "KMARS15")
+
+## Dumping Mixture files
+CreateMixture.GCL(sillys = "KMARS15", loci = loci42, IDs = NULL, mixname = "KMARS15", dir = "BAYES/Mixture", type = "BAYES", PT = FALSE)
+
+## Dumping Control files
+CreateControlFile.GCL(sillyvec = KMA211Pops, loci = loci42, mixname = "KMARS15", basename = "KMA211Pops42Loci", suffix = "", nreps = 40000, nchains = 5,
+                      groupvec = groupvec10, priorvec = KMARS15_Prior[["KMARS15"]], initmat = KMA211PopsInits, dir = "BAYES/Control",
+                      seeds = KMA211PopsChinookSeeds, thin = c(1, 1, 100), mixfortran = KMA21142MixtureFormat, basefortran = KMA211Pops42Loci.baseline, switches = "F T F T T T F")
+
+
+## Create output directory
+dir.create("BAYES/Output/KMARS15")
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Go run BAYES
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Summarize Round 2 Output ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+KMARS15_Estimates <- CustomCombineBAYESOutput.GCL(groupvec = seq(groups10), groupnames = groups10, 
+                                                  maindir = "BAYES/Output", mixvec = "KMARS15", prior = "",  
+                                                  ext = "RGN", nchains = 5, burn = 0.5, alpha = 0.1, PosteriorOutput = TRUE)
+
+# Dput 1) estimates stats + posterior output & 2) estimates stats
+dir.create("Estimates objects")
+dput(KMARS15_Estimates, file = "Estimates objects/KMARS15_Estimates.txt")
+dput(KMARS15_Estimates$Stats, file = "Estimates objects/KMARS15_EstimatesStats.txt")
+
+KMARS15_Estimates <- dget(file = "Estimates objects/KMARS15_Estimates.txt")
+KMARS15_EstimatesStats <- dget(file = "Estimates objects/KMARS15_EstimatesStats.txt")
+
+
+# Verify that Gelman-Rubin < 1.2
+KMARS15_Estimates$Stats$KMARS15[, "GR"]
+table(KMARS15_Estimates$Stats$KMARS15[, "GR"] > 1.2)
+sapply("KMARS15", function(Mix) {
+  BarPlot <- barplot2(KMARS15_EstimatesStats[[Mix]][, "GR"], col = "blue", ylim = c(1, pmax(1.5, max(KMARS15_EstimatesStats[[Mix]][, "GR"]))), ylab = "Gelman-Rubin", type = "h", xpd = FALSE, main = Mix, names.arg = '')
+  abline(h = 1.2, lwd = 3, xpd = FALSE)
+  text(x = BarPlot, y = 1, labels = groups10tworows, srt = 0, pos = 1, xpd = TRUE, cex = 0.55)
+})
+
+# Quick look at raw posterior output
+str(KMARS15_Estimates$Output)
+KMARS15_Header <- setNames(object = c("Kodiak Sport April 16-August 29, 2014"), 
+                           nm = "KMARS15")
+dput(x = KMARS15_Header, file = "Objects/KMARS15_Header.txt")
+
+file.copy(from = "V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Objects/PlotPosterior.txt",
+          to = "Objects/PlotPosterior.txt")
+
+PlotPosterior(mixvec = "KMARS15", output = KMARS15_Estimates$Output, 
+              groups = groups10, colors = colors10, 
+              header = KMARS15_Header, set.mfrow = c(5, 2), thin = 10)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Plot Round 2 Results ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Barplots
+file.copy(from = "V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Objects/QuickBarplot.txt",
+          to = "Objects/QuickBarplot.txt")
+
+QuickBarplot(mixvec = "KMARS15", estimatesstats = KMARS15_Estimates, groups = groups10, groups2rows = groups10tworows, header = KMARS15_Header)
+
+
+## Make violin plots of posteriors with RGs sorted
+
+file.copy(from = "V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Objects/ViolinPlot.txt",
+          to = "Objects/ViolinPlot.txt")
+
+ViolinPlot(estimates = KMARS15_Estimates, groups = groups10tworows, colors = colors10, header = KMARS15_Header)
+rm(KMARS15_Estimates)
