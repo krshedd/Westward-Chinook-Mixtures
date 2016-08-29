@@ -411,7 +411,7 @@ PlotPosterior(mixvec = "KMARS14", output = KMARS14_Estimates$Output,
 file.copy(from = "V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Objects/QuickBarplot.txt",
           to = "Objects/QuickBarplot.txt")
 
-QuickBarplot(mixvec = "KMARS14", estimatesstats = KMARS14_Estimates, groups = groups10, groups2rows = groups10tworows, header = KMARS14_Header)
+QuickBarplot(mixvec = "KMARS14", estimatesstats = KMARS14_EstimatesStats, groups = groups10, groups2rows = groups10tworows, header = KMARS14_Header)
 
 
 ## Make violin plots of posteriors with RGs sorted
@@ -466,7 +466,6 @@ KMARS15_Estimates <- CustomCombineBAYESOutput.GCL(groupvec = seq(groups10), grou
                                                   ext = "RGN", nchains = 5, burn = 0.5, alpha = 0.1, PosteriorOutput = TRUE)
 
 # Dput 1) estimates stats + posterior output & 2) estimates stats
-dir.create("Estimates objects")
 dput(KMARS15_Estimates, file = "Estimates objects/KMARS15_Estimates.txt")
 dput(KMARS15_Estimates$Stats, file = "Estimates objects/KMARS15_EstimatesStats.txt")
 
@@ -485,12 +484,9 @@ sapply("KMARS15", function(Mix) {
 
 # Quick look at raw posterior output
 str(KMARS15_Estimates$Output)
-KMARS15_Header <- setNames(object = c("Kodiak Sport April 16-August 29, 2014"), 
+KMARS15_Header <- setNames(object = c("Kodiak Sport May 17-August 14, 2015"), 
                            nm = "KMARS15")
 dput(x = KMARS15_Header, file = "Objects/KMARS15_Header.txt")
-
-file.copy(from = "V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Objects/PlotPosterior.txt",
-          to = "Objects/PlotPosterior.txt")
 
 PlotPosterior(mixvec = "KMARS15", output = KMARS15_Estimates$Output, 
               groups = groups10, colors = colors10, 
@@ -500,16 +496,8 @@ PlotPosterior(mixvec = "KMARS15", output = KMARS15_Estimates$Output,
 #### Plot Round 2 Results ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Barplots
-file.copy(from = "V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Objects/QuickBarplot.txt",
-          to = "Objects/QuickBarplot.txt")
-
-QuickBarplot(mixvec = "KMARS15", estimatesstats = KMARS15_Estimates, groups = groups10, groups2rows = groups10tworows, header = KMARS15_Header)
-
+QuickBarplot(mixvec = "KMARS15", estimatesstats = KMARS15_EstimatesStats, groups = groups10, groups2rows = groups10tworows, header = KMARS15_Header)
 
 ## Make violin plots of posteriors with RGs sorted
-
-file.copy(from = "V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Objects/ViolinPlot.txt",
-          to = "Objects/ViolinPlot.txt")
-
 ViolinPlot(estimates = KMARS15_Estimates, groups = groups10tworows, colors = colors10, header = KMARS15_Header)
 rm(KMARS15_Estimates)
