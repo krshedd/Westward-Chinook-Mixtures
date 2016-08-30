@@ -669,7 +669,7 @@ QuickBarplot <- function(mixvec, estimatesstats, groups, groups2rows = NULL, hea
 
 dput(x = QuickBarplot, file = "Objects/QuickBarplot.txt")
 
-QuickBarplot(mixvec = Round1Mixtures_2014, estimatesstats = Round1Mixtures_2014_Estimates, groups = groups10, groups2rows = groups10tworows, header = Round1Mixtures_2014_Header)
+QuickBarplot(mixvec = Round1Mixtures_2014, estimatesstats = Round1Mixtures_2014_EstimatesStats, groups = groups10, groups2rows = groups10tworows, header = Round1Mixtures_2014_Header)
 
 
 ## Make violin plots of posteriors with RGs sorted
@@ -775,7 +775,7 @@ PlotPosterior(mixvec = Round2Mixtures_2014, output = Round2Mixtures_2014_Estimat
 #### Plot Round 2 Results ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Barplots
-QuickBarplot(mixvec = Round2Mixtures_2014, estimatesstats = Round2Mixtures_2014_Estimates, groups = groups10, groups2rows = groups10tworows, header = Round2Mixtures_2014_Header)
+QuickBarplot(mixvec = Round2Mixtures_2014, estimatesstats = Round2Mixtures_2014_EstimatesStats, groups = groups10, groups2rows = groups10tworows, header = Round2Mixtures_2014_Header)
 
 ## Make violin plots of posteriors with RGs sorted
 ViolinPlot(estimates = Round2Mixtures_2014_Estimates, groups = groups10tworows, colors = colors10, header = Round2Mixtures_2014_Header)
@@ -878,7 +878,7 @@ PlotPosterior(mixvec = Round1Mixtures_2015, output = Round1Mixtures_2015_Estimat
 #### Plot Round 1 2015 Results ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Quick barplot
-QuickBarplot(mixvec = Round1Mixtures_2015, estimatesstats = Round1Mixtures_2015_Estimates, groups = groups10, groups2rows = groups10tworows, header = Round1Mixtures_2015_Header)
+QuickBarplot(mixvec = Round1Mixtures_2015, estimatesstats = Round1Mixtures_2015_EstimatesStats, groups = groups10, groups2rows = groups10tworows, header = Round1Mixtures_2015_Header)
 
 ## Make violin plots of posteriors with RGs sorted
 ViolinPlot(mixvec = Round1Mixtures_2015, estimates = Round1Mixtures_2015_Estimates, groups = groups10tworows, colors = colors10, header = Round1Mixtures_2015_Header)
@@ -960,9 +960,168 @@ PlotPosterior(mixvec = Round2Mixtures_2015, output = Round2Mixtures_2015_Estimat
 #### Plot Round 2 Results ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Barplots
-QuickBarplot(mixvec = Round2Mixtures_2015, estimatesstats = Round2Mixtures_2015_Estimates, groups = groups10, groups2rows = groups10tworows, header = Round2Mixtures_2015_Header)
+QuickBarplot(mixvec = Round2Mixtures_2015, estimatesstats = Round2Mixtures_2015_EstimatesStats, groups = groups10, groups2rows = groups10tworows, header = Round2Mixtures_2015_Header)
 
 ## Make violin plots of posteriors with RGs sorted
 ViolinPlot(estimates = Round2Mixtures_2015_Estimates, groups = groups10tworows, colors = colors10, header = Round2Mixtures_2015_Header)
 rm(Round2Mixtures_2015_Estimates)
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### 2014 Harvest Data ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+harvest14 <- read.csv(file = "Harvest/Salmon Catch by Day and Stat Area 2014.csv", as.is = TRUE)
+str(harvest14)
+
+# Convert Date
+harvest14$Date.Landed <- as.Date(harvest14$Date.Landed, format = "%m/%d/%Y")
+
+# Create Temporal Strata
+harvest14$Strata <- ifelse(harvest14$Date.Landed >= as.Date("2014-06-01") & harvest14$Date.Landed <= as.Date("2014-07-05"),
+                           "Early",
+                           ifelse(harvest14$Date.Landed >= as.Date("2014-07-06") & harvest14$Date.Landed <= as.Date("2014-08-05"),
+                                  "Late",
+                                  NA))
+
+# Create Geographic Strata
+unique(harvest14$Stat.Area)
+
+Stat.Area.Eastside <- unique(harvest14$Stat.Area)[c(
+  which(unique(harvest14$Stat.Area) >= 25810 & unique(harvest14$Stat.Area) <=25946),
+  which(unique(harvest14$Stat.Area) >= 25181 & unique(harvest14$Stat.Area) <=25235))]
+
+Stat.Area.Westside <- unique(harvest14$Stat.Area)[c(
+  which(unique(harvest14$Stat.Area) >= 25110 & unique(harvest14$Stat.Area) <=25170),
+  which(unique(harvest14$Stat.Area) >= 25311 & unique(harvest14$Stat.Area) <=25450))]
+
+Stat.Area.SWAlitak <- unique(harvest14$Stat.Area)[c(
+  which(unique(harvest14$Stat.Area) >= 25510 & unique(harvest14$Stat.Area) <=25770))]
+
+Stat.Area.Mainland <- unique(harvest14$Stat.Area)[c(
+  which(unique(harvest14$Stat.Area) >= 26210))]
+
+
+length(c(Stat.Area.Eastside, Stat.Area.Westside, Stat.Area.SWAlitak, Stat.Area.Mainland)); length(unique(harvest14$Stat.Area))
+unique(harvest14$Stat.Area)[!unique(harvest14$Stat.Area) %in% c(Stat.Area.Eastside, Stat.Area.Westside, Stat.Area.SWAlitak, Stat.Area.Mainland)]
+
+
+harvest14$Geo <- ifelse(harvest14$Stat.Area %in% Stat.Area.Mainland, "Mainland",
+                        ifelse(harvest14$Stat.Area %in% Stat.Area.SWAlitak, "SWAlitak",
+                               ifelse(harvest14$Stat.Area %in% Stat.Area.Eastside, "Eastside",
+                                      ifelse(harvest14$Stat.Area %in% Stat.Area.Westside, "Westside", NA
+                                      ))))
+
+table(harvest14$Strata, harvest14$Geo)
+
+require(plyr)
+ddply(.data = harvest14, ~Geo+Strata, summarise, harvest = sum(Number))
+
+aggregate(x = harvest14$Number, by = list(harvest14$Strata, harvest14$Geo), FUN = sum, simplify = FALSE)
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### 2015 Harvest Data ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+harvest15 <- read.csv(file = "Harvest/Salmon Catch by Day and Stat Area 2015.csv", as.is = TRUE)
+str(harvest15)
+
+# Convert Date
+harvest15$Date.Landed <- as.Date(harvest15$Date.Landed, format = "%m/%d/%Y")
+
+# Create Temporal Strata
+harvest15$Strata <- ifelse(harvest15$Date.Landed >= as.Date("2015-06-01") & harvest15$Date.Landed <= as.Date("2015-07-05"),
+                           "Early",
+                           ifelse(harvest15$Date.Landed >= as.Date("2015-07-06") & harvest15$Date.Landed <= as.Date("2015-08-05"),
+                                  "Late",
+                                  NA))
+
+# Create Geographic Strata
+unique(harvest15$Stat.Area)
+
+Stat.Area.Eastside <- unique(harvest15$Stat.Area)[c(
+  which(unique(harvest15$Stat.Area) >= 25810 & unique(harvest15$Stat.Area) <=25946),
+  which(unique(harvest15$Stat.Area) >= 25181 & unique(harvest15$Stat.Area) <=25235))]
+
+Stat.Area.Westside <- unique(harvest15$Stat.Area)[c(
+  which(unique(harvest15$Stat.Area) >= 25110 & unique(harvest15$Stat.Area) <=25170),
+  which(unique(harvest15$Stat.Area) >= 25311 & unique(harvest15$Stat.Area) <=25450))]
+
+Stat.Area.SWAlitak <- unique(harvest15$Stat.Area)[c(
+  which(unique(harvest15$Stat.Area) >= 25510 & unique(harvest15$Stat.Area) <=25770))]
+
+Stat.Area.Mainland <- unique(harvest15$Stat.Area)[c(
+  which(unique(harvest15$Stat.Area) >= 26210))]
+
+
+length(c(Stat.Area.Eastside, Stat.Area.Westside, Stat.Area.SWAlitak, Stat.Area.Mainland)); length(unique(harvest15$Stat.Area))
+unique(harvest15$Stat.Area)[!unique(harvest15$Stat.Area) %in% c(Stat.Area.Eastside, Stat.Area.Westside, Stat.Area.SWAlitak, Stat.Area.Mainland)]
+
+
+harvest15$Geo <- ifelse(harvest15$Stat.Area %in% Stat.Area.Mainland, "Mainland",
+                        ifelse(harvest15$Stat.Area %in% Stat.Area.SWAlitak, "SWAlitak",
+                               ifelse(harvest15$Stat.Area %in% Stat.Area.Eastside, "Eastside",
+                                      ifelse(harvest15$Stat.Area %in% Stat.Area.Westside, "Westside", NA
+                                      ))))
+
+table(harvest15$Strata, harvest15$Geo)
+
+require(plyr)
+ddply(.data = harvest15, ~Geo+Strata, summarise, harvest = sum(Number))
+
+aggregate(harvest15$Number, by = list(harvest15$Strata, harvest15$Geo), FUN = sum)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### 2016 Harvest Data ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+harvest16 <- read.csv(file = "Harvest/Salmon Catch by Day and Stat Area 2016.csv", as.is = TRUE)
+str(harvest16)
+
+# Convert Date
+harvest16$Date.Landed <- as.Date(harvest16$Date.Landed, format = "%m/%d/%Y")
+
+# Create Temporal Strata
+harvest16$Strata <- ifelse(harvest16$Date.Landed >= as.Date("2016-06-01") & harvest16$Date.Landed <= as.Date("2016-07-05"),
+                           "Early",
+                           ifelse(harvest16$Date.Landed >= as.Date("2016-07-06") & harvest16$Date.Landed <= as.Date("2016-08-05"),
+                                  "Late",
+                                  NA))
+
+# Create Geographic Strata
+unique(harvest16$Stat.Area)
+
+Stat.Area.Eastside <- unique(harvest16$Stat.Area)[c(
+  which(unique(harvest16$Stat.Area) >= 25810 & unique(harvest16$Stat.Area) <=25946),
+  which(unique(harvest16$Stat.Area) >= 25181 & unique(harvest16$Stat.Area) <=25235))]
+
+Stat.Area.Westside <- unique(harvest16$Stat.Area)[c(
+  which(unique(harvest16$Stat.Area) >= 25110 & unique(harvest16$Stat.Area) <=25170),
+  which(unique(harvest16$Stat.Area) >= 25311 & unique(harvest16$Stat.Area) <=25450))]
+
+Stat.Area.SWAlitak <- unique(harvest16$Stat.Area)[c(
+  which(unique(harvest16$Stat.Area) >= 25510 & unique(harvest16$Stat.Area) <=25770))]
+
+Stat.Area.Mainland <- unique(harvest16$Stat.Area)[c(
+  which(unique(harvest16$Stat.Area) >= 26210))]
+
+
+length(c(Stat.Area.Eastside, Stat.Area.Westside, Stat.Area.SWAlitak, Stat.Area.Mainland)); length(unique(harvest16$Stat.Area))
+unique(harvest16$Stat.Area)[!unique(harvest16$Stat.Area) %in% c(Stat.Area.Eastside, Stat.Area.Westside, Stat.Area.SWAlitak, Stat.Area.Mainland)]
+
+
+harvest16$Geo <- ifelse(harvest16$Stat.Area %in% Stat.Area.Mainland, "Mainland",
+                        ifelse(harvest16$Stat.Area %in% Stat.Area.SWAlitak, "SWAlitak",
+                               ifelse(harvest16$Stat.Area %in% Stat.Area.Eastside, "Eastside",
+                                      ifelse(harvest16$Stat.Area %in% Stat.Area.Westside, "Westside", NA
+                                      ))))
+
+table(harvest16$Strata, harvest16$Geo)
+
+require(plyr)
+ddply(.data = harvest16, ~Geo+Strata, summarise, harvest = sum(Number))
+
+aggregate(harvest16$Number, by = list(harvest16$Strata, harvest16$Geo), FUN = sum)
+
 
