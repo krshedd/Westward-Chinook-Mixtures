@@ -269,11 +269,23 @@ write.xlsx(KMASport_SampleSizes, file = "Output/KMASport_SampleSizes.xlsx")
 dput(x = KMASport_SampleSizes, file = "Objects/KMASport_SampleSizes.txt")
 
 
-
 # dput postQC mixture sillys
 dir.create("Raw genotypes/OriginalCollections_PostQC")
 invisible(sapply(KMASport, function(silly) {dput(x = get(paste(silly, ".gcl", sep = '')), file = paste("Raw genotypes/OriginalCollections_PostQC/" , silly, ".txt", sep = ''))} )); beep(8)
 
+
+## Add dates
+writeClipboard(as.character(KMARS14.gcl$attributes$FK_FISH_ID))
+KMARS14.gcl$attributes$CAPTURE_DATE <- as.Date(as.numeric(readClipboard()), origin = "1899-12-30")
+str(KMARS14.gcl)
+
+writeClipboard(as.character(KMARS15.gcl$attributes$FK_FISH_ID))
+KMARS15.gcl$attributes$CAPTURE_DATE <- as.Date(as.numeric(readClipboard()), origin = "1899-12-30")
+str(KMARS15.gcl)
+
+# dput postQC mixture sillys
+dir.create("Raw genotypes/OriginalCollections_PostQC_Dates")
+invisible(sapply(KMASport, function(silly) {dput(x = get(paste(silly, ".gcl", sep = '')), file = paste("Raw genotypes/OriginalCollections_PostQC_Dates/" , silly, ".txt", sep = ''))} )); beep(8)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### Clean workspace; dget .gcl objects and Locus Control ####
@@ -296,7 +308,7 @@ invisible(sapply(KMAobjects, function(objct) {assign(x = unlist(strsplit(x = obj
 
 
 ## Get un-altered mixtures
-invisible(sapply(KMASport, function(silly) {assign(x = paste(silly, ".gcl", sep = ""), value = dget(file = paste(getwd(), "/Raw genotypes/OriginalCollections_PostQC/", silly, ".txt", sep = "")), pos = 1)} )); beep(2)
+invisible(sapply(KMASport, function(silly) {assign(x = paste(silly, ".gcl", sep = ""), value = dget(file = paste(getwd(), "/Raw genotypes/OriginalCollections_PostQC_Dates/", silly, ".txt", sep = "")), pos = 1)} )); beep(2)
 objects(pattern = "\\.gcl")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
