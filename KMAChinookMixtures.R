@@ -971,18 +971,21 @@ rm(Round2Mixtures_2015_Estimates)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### 2014 Harvest Data ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-harvest14 <- read.csv(file = "Harvest/Salmon Catch by Day and Stat Area 2014.csv", as.is = TRUE)
+harvest14 <- read.csv(file = "Harvest/Salmon Catch by Day and Stat Area 2014 Date.csv", as.is = TRUE)
 str(harvest14)
 
 # Convert Date
-harvest14$Date.Landed <- as.Date(harvest14$Date.Landed, format = "%m/%d/%Y")
+harvest14$Date.Landed <- as.Date(harvest14$Date.Landed, format = "%Y-%m-%d")
+harvest14$Date.Fishing.Began <- as.Date(harvest14$Date.Fishing.Began, format = "%Y-%m-%d")
+harvest14$Date.Fishing.Ended <- as.Date(harvest14$Date.Fishing.Ended, format = "%Y-%m-%d")
 
 # Create Temporal Strata
-harvest14$Strata <- ifelse(harvest14$Date.Landed >= as.Date("2014-06-01") & harvest14$Date.Landed <= as.Date("2014-07-05"),
+harvest14$Strata <- ifelse(harvest14$Date.Fishing.Began >= as.Date("2014-06-01") & harvest14$Date.Fishing.Began <= as.Date("2014-07-05"),
                            "Early",
-                           ifelse(harvest14$Date.Landed >= as.Date("2014-07-06") & harvest14$Date.Landed <= as.Date("2014-08-05"),
+                           ifelse(harvest14$Date.Fishing.Began >= as.Date("2014-07-06") & harvest14$Date.Fishing.Began <= as.Date("2014-08-05"),
                                   "Late",
                                   NA))
+table(harvest14$Strata)
 
 # Create Geographic Strata
 unique(harvest14$Stat.Area)
@@ -1024,18 +1027,21 @@ aggregate(x = harvest14$Number, by = list(harvest14$Strata, harvest14$Geo), FUN 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### 2015 Harvest Data ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-harvest15 <- read.csv(file = "Harvest/Salmon Catch by Day and Stat Area 2015.csv", as.is = TRUE)
+harvest15 <- read.csv(file = "Harvest/Salmon Catch by Day and Stat Area 2015 Date.csv", as.is = TRUE)
 str(harvest15)
 
 # Convert Date
-harvest15$Date.Landed <- as.Date(harvest15$Date.Landed, format = "%m/%d/%Y")
+harvest15$Date.Landed <- as.Date(harvest15$Date.Landed, format = "%Y-%m-%d")
+harvest15$Date.Fishing.Began <- as.Date(harvest15$Date.Fishing.Began, format = "%Y-%m-%d")
+harvest15$Date.Fishing.Ended <- as.Date(harvest15$Date.Fishing.Ended, format = "%Y-%m-%d")
 
 # Create Temporal Strata
-harvest15$Strata <- ifelse(harvest15$Date.Landed >= as.Date("2015-06-01") & harvest15$Date.Landed <= as.Date("2015-07-05"),
+harvest15$Strata <- ifelse(harvest15$Date.Fishing.Began >= as.Date("2015-06-01") & harvest15$Date.Fishing.Began <= as.Date("2015-07-05"),
                            "Early",
-                           ifelse(harvest15$Date.Landed >= as.Date("2015-07-06") & harvest15$Date.Landed <= as.Date("2015-08-05"),
+                           ifelse(harvest15$Date.Fishing.Began >= as.Date("2015-07-06") & harvest15$Date.Fishing.Began <= as.Date("2015-08-05"),
                                   "Late",
                                   NA))
+table(harvest15$Strata)
 
 # Create Geographic Strata
 unique(harvest15$Stat.Area)
@@ -1076,11 +1082,13 @@ aggregate(harvest15$Number, by = list(harvest15$Strata, harvest15$Geo), FUN = su
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### 2016 Harvest Data ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-harvest16 <- read.csv(file = "Harvest/Salmon Catch by Day and Stat Area 2016.csv", as.is = TRUE)
+harvest16 <- read.csv(file = "Harvest/Salmon Catch by Day and Stat Area 2016 Date.csv", as.is = TRUE)
 str(harvest16)
 
 # Convert Date
-harvest16$Date.Landed <- as.Date(harvest16$Date.Landed, format = "%m/%d/%Y")
+harvest16$Date.Landed <- as.Date(harvest16$Date.Landed, format = "%Y-%m-%d")
+harvest16$Date.Fishing.Began <- as.Date(harvest16$Date.Fishing.Began, format = "%Y-%m-%d")
+harvest16$Date.Fishing.Ended <- as.Date(harvest16$Date.Fishing.Ended, format = "%Y-%m-%d")
 
 # Create Temporal Strata
 harvest16$Strata <- ifelse(harvest16$Date.Landed >= as.Date("2016-06-01") & harvest16$Date.Landed <= as.Date("2016-07-05"),
@@ -1088,6 +1096,7 @@ harvest16$Strata <- ifelse(harvest16$Date.Landed >= as.Date("2016-06-01") & harv
                            ifelse(harvest16$Date.Landed >= as.Date("2016-07-06") & harvest16$Date.Landed <= as.Date("2016-08-05"),
                                   "Late",
                                   NA))
+table(harvest16$Strata)
 
 # Create Geographic Strata
 unique(harvest16$Stat.Area)
