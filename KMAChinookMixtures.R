@@ -991,18 +991,18 @@ table(harvest14$Strata)
 unique(harvest14$Stat.Area)
 
 Stat.Area.Eastside <- unique(harvest14$Stat.Area)[c(
-  which(unique(harvest14$Stat.Area) >= 25810 & unique(harvest14$Stat.Area) <=25946),
-  which(unique(harvest14$Stat.Area) >= 25181 & unique(harvest14$Stat.Area) <=25235))]
+  which(unique(harvest14$Stat.Area) >= 25800 & unique(harvest14$Stat.Area) <=25999),
+  which(unique(harvest14$Stat.Area) >= 25200 & unique(harvest14$Stat.Area) <=25299))]
 
 Stat.Area.Westside <- unique(harvest14$Stat.Area)[c(
-  which(unique(harvest14$Stat.Area) >= 25110 & unique(harvest14$Stat.Area) <=25170),
-  which(unique(harvest14$Stat.Area) >= 25311 & unique(harvest14$Stat.Area) <=25450))]
+  which(unique(harvest14$Stat.Area) >= 25100 & unique(harvest14$Stat.Area) <=25199),
+  which(unique(harvest14$Stat.Area) >= 25300 & unique(harvest14$Stat.Area) <=25499))]
 
 Stat.Area.SWAlitak <- unique(harvest14$Stat.Area)[c(
-  which(unique(harvest14$Stat.Area) >= 25510 & unique(harvest14$Stat.Area) <=25770))]
+  which(unique(harvest14$Stat.Area) >= 25500 & unique(harvest14$Stat.Area) <=25799))]
 
 Stat.Area.Mainland <- unique(harvest14$Stat.Area)[c(
-  which(unique(harvest14$Stat.Area) >= 26210))]
+  which(unique(harvest14$Stat.Area) >= 26200))]
 
 
 length(c(Stat.Area.Eastside, Stat.Area.Westside, Stat.Area.SWAlitak, Stat.Area.Mainland)); length(unique(harvest14$Stat.Area))
@@ -1019,10 +1019,12 @@ table(harvest14$Strata, harvest14$Geo)
 
 require(plyr)
 ddply(.data = harvest14, ~Geo+Strata, summarise, harvest = sum(Number))
+daply(.data = harvest14, ~Geo+Strata, summarise, harvest = sum(Number))
 
 aggregate(x = harvest14$Number, by = list(harvest14$Strata, harvest14$Geo), FUN = sum, simplify = FALSE)
 
-
+md <- melt(data = harvest14, id.vars = c("Strata", "Geo"), measure.vars = "Number", na.rm = TRUE)
+cast(md, Geo~Strata, sum)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### 2015 Harvest Data ####
@@ -1047,18 +1049,18 @@ table(harvest15$Strata)
 unique(harvest15$Stat.Area)
 
 Stat.Area.Eastside <- unique(harvest15$Stat.Area)[c(
-  which(unique(harvest15$Stat.Area) >= 25810 & unique(harvest15$Stat.Area) <=25946),
-  which(unique(harvest15$Stat.Area) >= 25181 & unique(harvest15$Stat.Area) <=25235))]
+  which(unique(harvest15$Stat.Area) >= 25800 & unique(harvest15$Stat.Area) <=25999),
+  which(unique(harvest15$Stat.Area) >= 25200 & unique(harvest15$Stat.Area) <=25299))]
 
 Stat.Area.Westside <- unique(harvest15$Stat.Area)[c(
-  which(unique(harvest15$Stat.Area) >= 25110 & unique(harvest15$Stat.Area) <=25170),
-  which(unique(harvest15$Stat.Area) >= 25311 & unique(harvest15$Stat.Area) <=25450))]
+  which(unique(harvest15$Stat.Area) >= 25100 & unique(harvest15$Stat.Area) <=25199),
+  which(unique(harvest15$Stat.Area) >= 25300 & unique(harvest15$Stat.Area) <=25499))]
 
 Stat.Area.SWAlitak <- unique(harvest15$Stat.Area)[c(
-  which(unique(harvest15$Stat.Area) >= 25510 & unique(harvest15$Stat.Area) <=25770))]
+  which(unique(harvest15$Stat.Area) >= 25500 & unique(harvest15$Stat.Area) <=25799))]
 
 Stat.Area.Mainland <- unique(harvest15$Stat.Area)[c(
-  which(unique(harvest15$Stat.Area) >= 26210))]
+  which(unique(harvest15$Stat.Area) >= 26200))]
 
 
 length(c(Stat.Area.Eastside, Stat.Area.Westside, Stat.Area.SWAlitak, Stat.Area.Mainland)); length(unique(harvest15$Stat.Area))
@@ -1075,9 +1077,14 @@ table(harvest15$Strata, harvest15$Geo)
 
 require(plyr)
 ddply(.data = harvest15, ~Geo+Strata, summarise, harvest = sum(Number))
+daply(.data = harvest15, ~Geo+Strata, summarise, harvest = sum(Number))
 
 aggregate(harvest15$Number, by = list(harvest15$Strata, harvest15$Geo), FUN = sum)
+aggregate(Number ~ Geo + Strata, data = harvest15, sum)
+cast(aggregate(Number ~ Geo + Strata, data = harvest15, sum), Geo ~ Strata, value = "Number")
 
+md <- melt(data = harvest15, id.vars = c("Strata", "Geo"), measure.vars = "Number", na.rm = TRUE)
+cast(md, Geo~Strata, sum)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### 2016 Harvest Data ####
@@ -1101,19 +1108,19 @@ table(harvest16$Strata)
 # Create Geographic Strata
 unique(harvest16$Stat.Area)
 
-Stat.Area.Eastside <- unique(harvest16$Stat.Area)[c(
-  which(unique(harvest16$Stat.Area) >= 25810 & unique(harvest16$Stat.Area) <=25946),
-  which(unique(harvest16$Stat.Area) >= 25181 & unique(harvest16$Stat.Area) <=25235))]
+Stat.Area.Eastside <- unique(harvest06$Stat.Area)[c(
+  which(unique(harvest06$Stat.Area) >= 25800 & unique(harvest06$Stat.Area) <=25999),
+  which(unique(harvest06$Stat.Area) >= 25200 & unique(harvest06$Stat.Area) <=25299))]
 
-Stat.Area.Westside <- unique(harvest16$Stat.Area)[c(
-  which(unique(harvest16$Stat.Area) >= 25110 & unique(harvest16$Stat.Area) <=25170),
-  which(unique(harvest16$Stat.Area) >= 25311 & unique(harvest16$Stat.Area) <=25450))]
+Stat.Area.Westside <- unique(harvest06$Stat.Area)[c(
+  which(unique(harvest06$Stat.Area) >= 25100 & unique(harvest06$Stat.Area) <=25199),
+  which(unique(harvest06$Stat.Area) >= 25300 & unique(harvest06$Stat.Area) <=25499))]
 
-Stat.Area.SWAlitak <- unique(harvest16$Stat.Area)[c(
-  which(unique(harvest16$Stat.Area) >= 25510 & unique(harvest16$Stat.Area) <=25770))]
+Stat.Area.SWAlitak <- unique(harvest06$Stat.Area)[c(
+  which(unique(harvest06$Stat.Area) >= 25500 & unique(harvest06$Stat.Area) <=25799))]
 
-Stat.Area.Mainland <- unique(harvest16$Stat.Area)[c(
-  which(unique(harvest16$Stat.Area) >= 26210))]
+Stat.Area.Mainland <- unique(harvest06$Stat.Area)[c(
+  which(unique(harvest06$Stat.Area) >= 26200))]
 
 
 length(c(Stat.Area.Eastside, Stat.Area.Westside, Stat.Area.SWAlitak, Stat.Area.Mainland)); length(unique(harvest16$Stat.Area))
@@ -1130,6 +1137,7 @@ table(harvest16$Strata, harvest16$Geo)
 
 require(plyr)
 ddply(.data = harvest16, ~Geo+Strata, summarise, harvest = sum(Number))
+daply(.data = harvest16, ~Geo+Strata, summarise, harvest = sum(Number))
 
 aggregate(harvest16$Number, by = list(harvest16$Strata, harvest16$Geo), FUN = sum)
 
