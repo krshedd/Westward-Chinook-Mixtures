@@ -1662,6 +1662,505 @@ sapply(KMA2015[-4], function(geomix) {
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Plot Percentages for KMA Mixtures ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+KMA2014Strata_EstimatesStats <- dget(file = "Estimates objects/Final/KMA2014Strata_EstimatesStats.txt")
+KMA2015Strata_EstimatesStats <- dget(file = "Estimates objects/Final/KMA2015Strata_EstimatesStats.txt")
+
+str(KMA2014Strata_EstimatesStats)
+
+
+
+
+# Three barplot layout
+layoutmat <- matrix(data=c(  1, 2,
+                             1, 3,
+                             1, 4,
+                             5, 6), nrow = 4, ncol = 2, byrow = TRUE)
+
+
+
+GeoMix <- c("KALITC", "KEASTC", "KWESTC", "KMAINC")
+
+filenames <- setNames(object = c("SW Kodiak Alitak Proportions 2014-2016", 
+                                 "Eastside Proportions 2014-2016",
+                                 "Westside Proportions 2014-2016",
+                                 "Mainland Proportions 2014-2016"), nm = GeoMix)
+
+# If showing proportions (percetages) use blue, otherwise green as "low"
+ProportionColors <- colorpanel(n = 2, low = "blue", high = "white")
+
+
+#~~~~~~~~~~~~~~~~~~
+# 2014
+TempMix14 <- sapply(KMA2014, function(geo) {grep(pattern = geo, x = names(KMA2014Strata_EstimatesStats), value = TRUE)}, simplify = FALSE)
+
+Legend14 <- setNames(object = c("June 1-July 5", "July 6-August 5"), 
+                     nm = c("1_Early", "2_Late"))
+TempLegend14 <- sapply(KMA2014, function(geo) {
+  Legend14[sapply(TempMix14[[geo]], function(strata) {unlist(strsplit(x = strata, split = paste(geo, "_", sep = '')))[2]} )]
+}, simplify = FALSE)
+
+
+TempProportionColors14 <- sapply(KMA2014, function(geo) {
+  ProportionColors[sapply(TempMix14[[geo]], function(strata) {as.numeric(unlist(strsplit(x = strata, split = "_"))[2])} )]
+}, simplify = FALSE)
+
+Estimates14 <- KMA2014Strata_EstimatesStats
+
+#~~~~~~~~~~~~~~~~~~
+# 2015
+TempMix15 <- sapply(KMA2015, function(geo) {grep(pattern = geo, x = names(KMA2015Strata_EstimatesStats), value = TRUE)}, simplify = FALSE)
+
+Legend15 <- setNames(object = c("June 1-July 5", "July 6-August 5"), 
+                     nm = c("1_Early", "2_Late"))
+TempLegend15 <- sapply(KMA2015, function(geo) {
+  Legend15[sapply(TempMix15[[geo]], function(strata) {unlist(strsplit(x = strata, split = paste(geo, "_", sep = '')))[2]} )]
+}, simplify = FALSE)
+
+
+TempProportionColors15 <- sapply(KMA2015, function(geo) {
+  ProportionColors[sapply(TempMix15[[geo]], function(strata) {as.numeric(unlist(strsplit(x = strata, split = "_"))[2])} )]
+}, simplify = FALSE)
+
+Estimates15 <- KMA2015Strata_EstimatesStats
+
+#~~~~~~~~~~~~~~~~~~
+# 2016
+# TempMix16 <- sapply(KMA2016, function(geo) {grep(pattern = geo, x = names(KMA2016Strata_EstimatesStats), value = TRUE)}, simplify = FALSE)
+# 
+# Legend16 <- setNames(object = c("June 1-27", "June 28-July 25", "July 26-August 29"), 
+#                      nm = c("1_Early", "2_Middle", "3_Late"))
+# TempLegend16 <- sapply(KMA2016, function(geo) {
+#   Legend16[sapply(TempMix16[[geo]], function(strata) {unlist(strsplit(x = strata, split = paste(geo, "_", sep = '')))[2]} )]
+# }, simplify = FALSE)
+# 
+# 
+# TempProportionColors16 <- sapply(KMA2016, function(geo) {
+#   ProportionColors[sapply(TempMix16[[geo]], function(strata) {as.numeric(unlist(strsplit(x = strata, split = "_"))[2])} )]
+# }, simplify = FALSE)
+# 
+# Estimates16 <- KMA2016Strata_EstimatesStats
+
+#~~~~~~~~~~~~~~~~~~
+# Size Parameters
+Groups <- groups10
+Groups2Rows <- groups10tworows
+cex.lab <- 1.5
+cex.xaxis <- 0.5
+cex.yaxis <- 1.3
+cex.leg <- 1.1
+ci.lwd <- 2.5
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Make figures as .emf files
+
+# dir.create("Figures/All Years")
+require(devEMF)
+require(gplots)
+
+sapply(GeoMix, function(geomix) {
+  
+  emf(file = paste("Figures/All Years/", filenames[geomix], ".emf", sep = ''), width = 6, height = 5.75, family = "sans", bg = "white")
+  
+  
+  layout(mat = layoutmat, widths = c(0.075, 1, 1), heights = c(0.9, 0.9, 1, 0.1))
+  par(mar = rep(0, 4))
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## Y-axis label
+  plot.new()
+  text(x = 0.25, y = 0.5, labels = "Percentage of Catch", srt = 90, cex = cex.lab)
+  
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## 2014 Barplot
+  geomix14 <- grep(pattern = geomix, x = names(TempMix14), value = TRUE)
+  par(mar = c(1, 1, 1, 1))
+  Barplot14 <- barplot2(height = t(sapply(TempMix14[[geomix14]], function(tempmix) {Estimates14[[tempmix]][, "median"]})) * 100, 
+                        beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                        ci.l = t(sapply(TempMix14[[geomix14]], function(tempmix) {Estimates14[[tempmix]][, "5%"]})) * 100, 
+                        ci.u = t(sapply(TempMix14[[geomix14]], function(tempmix) {Estimates14[[tempmix]][, "95%"]})) * 100, 
+                        ylim = c(0, 100), col = TempProportionColors14[[geomix14]], yaxt = "n", xaxt = 'n')
+  axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+  legend(legend = TempLegend14[[geomix14]], x = "topleft", fill = TempProportionColors14[[geomix14]], border = "black", bty = "n", cex = cex.leg, title="2014")
+  abline(h = 0, xpd = FALSE)
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## 2015 Barplot
+  geomix15 <- grep(pattern = geomix, x = names(TempMix15), value = TRUE)
+  par(mar = c(1, 1, 1, 1))
+  Barplot15 <- barplot2(height = t(sapply(TempMix15[[geomix15]], function(tempmix) {Estimates15[[tempmix]][, "median"]})) * 100, 
+                        beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                        ci.l = t(sapply(TempMix15[[geomix15]], function(tempmix) {Estimates15[[tempmix]][, "5%"]})) * 100, 
+                        ci.u = t(sapply(TempMix15[[geomix15]], function(tempmix) {Estimates15[[tempmix]][, "95%"]})) * 100, 
+                        ylim = c(0, 100), col = TempProportionColors15[[geomix15]], yaxt = "n", xaxt = 'n')
+  axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+  legend(legend = TempLegend15[[geomix15]], x = "topleft", fill = TempProportionColors15[[geomix15]], border = "black", bty = "n", cex = cex.leg, title="2015")
+  abline(h = 0, xpd = FALSE)
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## 2016 Barplot
+  
+  par(mar = c(2, 1, 1, 1))
+  Barplot16 <- barplot2(height = matrix(data = rep(0, 45), nrow = 3, ncol = length(groups10)),
+                        beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                        ci.l = matrix(data = rep(0, 45), nrow = 3, ncol = length(groups10)),
+                        ci.u = matrix(data = rep(0, 45), nrow = 3, ncol = length(groups10)),
+                        ylim = c(0, 100), col = "black", yaxt = "n", xaxt = 'n')
+  axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+  legend(legend = TempLegend14[[geomix14]], x = "topleft", fill = TempProportionColors14[[geomix14]], border = "black", bty = "n", cex = cex.leg, title="2016")
+  abline(h = 0, xpd = FALSE)
+  
+  # geomix16 <- grep(pattern = geomix, x = names(TempMix16), value = TRUE)
+  # par(mar = c(2, 1, 1, 1))
+  # Barplot16 <- barplot2(height = t(sapply(TempMix16[[geomix16]], function(tempmix) {Estimates16[[tempmix]][, "median"]})) * 100, 
+  #                       beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+  #                       ci.l = t(sapply(TempMix16[[geomix16]], function(tempmix) {Estimates16[[tempmix]][, "5%"]})) * 100, 
+  #                       ci.u = t(sapply(TempMix16[[geomix16]], function(tempmix) {Estimates16[[tempmix]][, "95%"]})) * 100, 
+  #                       ylim = c(0, 100), col = TempProportionColors16[[geomix16]], cex.axis = cex.yaxis, yaxt = "n", xaxt = 'n')
+  # axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+  # legend(legend = TempLegend16[[geomix16]], x = "topleft", fill = TempProportionColors16[[geomix16]], border = "black", bty = "n", cex = cex.leg, title="2016")
+  # abline(h = 0, xpd = FALSE)
+  # 
+  mtext(text = Groups2Rows, side = 1, line = 1, at = apply(Barplot16, 2, mean), adj = 0.5, cex = cex.xaxis)
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## Blank Corner
+  par(mar = rep(0, 4))
+  plot.new()
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## x-axis label
+  par(mar = rep(0, 4))
+  plot.new()
+  text(x = 0.5, y = 0.5, labels = "Reporting Group", cex = cex.lab)
+  
+  
+  dev.off()
+})
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Plot Harvests for KMA Mixtures ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+KMA2014Strata_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2014Strata_HarvestEstimatesStats.txt")
+KMA2015Strata_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2015Strata_HarvestEstimatesStats.txt")
+
+str(KMA2014Strata_EstimatesStats)
+
+
+
+
+# Three barplot layout
+layoutmat <- matrix(data=c(  1, 2,
+                             1, 3,
+                             1, 4,
+                             5, 6), nrow = 4, ncol = 2, byrow = TRUE)
+
+
+
+GeoMix <- c("KALITC", "KEASTC", "KWESTC", "KMAINC")
+
+filenames <- setNames(object = c("SW Kodiak Alitak Harvest 2014-2016", 
+                                 "Eastside Harvest 2014-2016",
+                                 "Westside Harvest 2014-2016",
+                                 "Mainland Harvest 2014-2016"), nm = GeoMix)
+
+# If showing proportions (percetages) use blue, otherwise green as "low"
+HarvestColors <- colorpanel(n = 2, low = "green", high = "white")
+
+
+#~~~~~~~~~~~~~~~~~~
+# 2014
+TempMix14 <- sapply(KMA2014, function(geo) {grep(pattern = geo, x = names(KMA2014Strata_EstimatesStats), value = TRUE)}, simplify = FALSE)
+
+Legend14 <- setNames(object = c("June 1-July 5", "July 6-August 5"), 
+                     nm = c("1_Early", "2_Late"))
+TempLegend14 <- sapply(KMA2014, function(geo) {
+  Legend14[sapply(TempMix14[[geo]], function(strata) {unlist(strsplit(x = strata, split = paste(geo, "_", sep = '')))[2]} )]
+}, simplify = FALSE)
+
+
+TempHarvestColors14 <- sapply(KMA2014, function(geo) {
+  HarvestColors[sapply(TempMix14[[geo]], function(strata) {as.numeric(unlist(strsplit(x = strata, split = "_"))[2])} )]
+}, simplify = FALSE)
+
+HarvestEstimates14 <- KMA2014Strata_HarvestEstimatesStats
+
+#~~~~~~~~~~~~~~~~~~
+# 2015
+TempMix15 <- sapply(KMA2015, function(geo) {grep(pattern = geo, x = names(KMA2015Strata_EstimatesStats), value = TRUE)}, simplify = FALSE)
+
+Legend15 <- setNames(object = c("June 1-July 5", "July 6-August 5"), 
+                     nm = c("1_Early", "2_Late"))
+TempLegend15 <- sapply(KMA2015, function(geo) {
+  Legend15[sapply(TempMix15[[geo]], function(strata) {unlist(strsplit(x = strata, split = paste(geo, "_", sep = '')))[2]} )]
+}, simplify = FALSE)
+
+
+TempHarvestColors15 <- sapply(KMA2015, function(geo) {
+  HarvestColors[sapply(TempMix15[[geo]], function(strata) {as.numeric(unlist(strsplit(x = strata, split = "_"))[2])} )]
+}, simplify = FALSE)
+
+HarvestEstimates15 <- KMA2015Strata_HarvestEstimatesStats
+
+#~~~~~~~~~~~~~~~~~~
+# 2016
+# TempMix16 <- sapply(KMA2016, function(geo) {grep(pattern = geo, x = names(KMA2016Strata_EstimatesStats), value = TRUE)}, simplify = FALSE)
+# 
+# Legend16 <- setNames(object = c("June 1-27", "June 28-July 25", "July 26-August 29"), 
+#                      nm = c("1_Early", "2_Middle", "3_Late"))
+# TempLegend16 <- sapply(KMA2016, function(geo) {
+#   Legend16[sapply(TempMix16[[geo]], function(strata) {unlist(strsplit(x = strata, split = paste(geo, "_", sep = '')))[2]} )]
+# }, simplify = FALSE)
+# 
+# 
+# TempHarvestColors16 <- sapply(KMA2016, function(geo) {
+#   HarvestColors[sapply(TempMix16[[geo]], function(strata) {as.numeric(unlist(strsplit(x = strata, split = "_"))[2])} )]
+# }, simplify = FALSE)
+# 
+# HarvestEstimates16 <- KMA2016Strata_HarvestEstimatesStats
+
+#~~~~~~~~~~~~~~~~~~
+# Size Parameters
+Groups <- groups10
+Groups2Rows <- groups10tworows
+cex.lab <- 1.5
+cex.xaxis <- 0.5
+cex.yaxis <- 1.3
+cex.leg <- 1.1
+ci.lwd <- 2.5
+ymax <- 1600  # max(sapply(c(HarvestEstimates14, HarvestEstimates15), function(strata) {strata[, "95%"]}))
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Make figures as .emf files
+
+# dir.create("Figures/All Years")
+require(devEMF)
+require(gplots)
+
+sapply(GeoMix, function(geomix) {
+  
+  emf(file = paste("Figures/All Years/", filenames[geomix], ".emf", sep = ''), width = 6, height = 5.75, family = "sans", bg = "white")
+  
+  
+  layout(mat = layoutmat, widths = c(0.075, 1, 1), heights = c(0.9, 0.9, 1, 0.1))
+  par(mar = rep(0, 4))
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## Y-axis label
+  plot.new()
+  text(x = 0.25, y = 0.5, labels = "Number of Fish Harvested", srt = 90, cex = cex.lab)
+  
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## 2014 Barplot
+  geomix14 <- grep(pattern = geomix, x = names(TempMix14), value = TRUE)
+  par(mar = c(1, 1, 1, 1))
+  Barplot14 <- barplot2(height = t(sapply(TempMix14[[geomix14]], function(tempmix) {HarvestEstimates14[[tempmix]][, "median"]})), 
+                        beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                        ci.l = t(sapply(TempMix14[[geomix14]], function(tempmix) {HarvestEstimates14[[tempmix]][, "5%"]})), 
+                        ci.u = t(sapply(TempMix14[[geomix14]], function(tempmix) {HarvestEstimates14[[tempmix]][, "95%"]})), 
+                        ylim = c(0, ymax), col = TempHarvestColors14[[geomix14]], yaxt = "n", xaxt = 'n')
+  axis(side = 2, at = seq(0, ymax, 500), labels = formatC(x = seq(0, ymax, 500), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+  legend(legend = TempLegend14[[geomix14]], x = "topleft", fill = TempHarvestColors14[[geomix14]], border = "black", bty = "n", cex = cex.leg, title="2014")
+  abline(h = 0, xpd = FALSE)
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## 2015 Barplot
+  geomix15 <- grep(pattern = geomix, x = names(TempMix15), value = TRUE)
+  par(mar = c(1, 1, 1, 1))
+  Barplot15 <- barplot2(height = t(sapply(TempMix15[[geomix15]], function(tempmix) {HarvestEstimates15[[tempmix]][, "median"]})), 
+                        beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                        ci.l = t(sapply(TempMix15[[geomix15]], function(tempmix) {HarvestEstimates15[[tempmix]][, "5%"]})), 
+                        ci.u = t(sapply(TempMix15[[geomix15]], function(tempmix) {HarvestEstimates15[[tempmix]][, "95%"]})), 
+                        ylim = c(0, ymax), col = TempHarvestColors15[[geomix15]], yaxt = "n", xaxt = 'n')
+  axis(side = 2, at = seq(0, ymax, 500), labels = formatC(x = seq(0, ymax, 500), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+  legend(legend = TempLegend15[[geomix15]], x = "topleft", fill = TempHarvestColors15[[geomix15]], border = "black", bty = "n", cex = cex.leg, title="2015")
+  abline(h = 0, xpd = FALSE)
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## 2016 Barplot
+  
+  par(mar = c(2, 1, 1, 1))
+  Barplot16 <- barplot2(height = matrix(data = rep(0, 45), nrow = 3, ncol = length(groups10)),
+                        beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                        ci.l = matrix(data = rep(0, 45), nrow = 3, ncol = length(groups10)),
+                        ci.u = matrix(data = rep(0, 45), nrow = 3, ncol = length(groups10)),
+                        ylim = c(0, ymax), col = "black", yaxt = "n", xaxt = 'n')
+  axis(side = 2, at = seq(0, ymax, 500), labels = formatC(x = seq(0, ymax, 500), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+  legend(legend = TempLegend14[[geomix14]], x = "topleft", fill = TempHarvestColors14[[geomix14]], border = "black", bty = "n", cex = cex.leg, title="2016")
+  abline(h = 0, xpd = FALSE)
+  
+  
+  # geomix16 <- grep(pattern = geomix, x = names(TempMix16), value = TRUE)
+  # par(mar = c(2, 1, 1, 1))
+  # Barplot16 <- barplot2(height = t(sapply(TempMix16[[geomix16]], function(tempmix) {HarvestEstimates16[[tempmix]][, "median"]})), 
+  #                       beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+  #                       ci.l = t(sapply(TempMix16[[geomix16]], function(tempmix) {HarvestEstimates16[[tempmix]][, "5%"]})), 
+  #                       ci.u = t(sapply(TempMix16[[geomix16]], function(tempmix) {HarvestEstimates16[[tempmix]][, "95%"]})), 
+  #                       ylim = c(0, ymax), col = TempHarvestColors16[[geomix16]], yaxt = "n", xaxt = 'n')
+  # axis(side = 2, at = seq(0, ymax, 500), labels = formatC(x = seq(0, ymax, 500), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+  # legend(legend = TempLegend16[[geomix16]], x = "topleft", fill = TempHarvestColors16[[geomix16]], border = "black", bty = "n", cex = cex.leg, title="2016")
+  # abline(h = 0, xpd = FALSE)
+  # 
+  mtext(text = Groups2Rows, side = 1, line = 1, at = apply(Barplot16, 2, mean), adj = 0.5, cex = cex.xaxis)
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## Blank Corner
+  par(mar = rep(0, 4))
+  plot.new()
+  
+  #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  ## x-axis label
+  par(mar = rep(0, 4))
+  plot.new()
+  text(x = 0.5, y = 0.5, labels = "Reporting Group", cex = cex.lab)
+  
+  
+  dev.off()
+})
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Table results ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+## Dates
+# DatesStrata2014 <- read.table(file = "Harvest/2014DatesByStrata.txt", header = TRUE, sep = "\t", as.is = TRUE)
+# DatesStrata2014.mat <- as.matrix(DatesStrata2014[-1])
+# dimnames(DatesStrata2014.mat) <- list(DatesStrata2014$location, c("1_Early", "2_Middle", "3_Late"))
+# dput(x = DatesStrata2014.mat, file = "Objects/DatesStrata2014_Final.txt"); rm(DatesStrata2014.mat)
+DatesStrata2014_Final <- dget(file = "Objects/DatesStrata2014_Final.txt")
+
+
+# DatesStrata2015 <- read.table(file = "Harvest/2015DatesByStrata.txt", header = TRUE, sep = "\t", as.is = TRUE)
+# DatesStrata2015.mat <- as.matrix(DatesStrata2015[-1])
+# dimnames(DatesStrata2015.mat) <- list(DatesStrata2015$location, c("1_Early", "2_Middle", "3_Late"))
+# dput(x = DatesStrata2015.mat, file = "Objects/DatesStrata2015_Final.txt"); rm(DatesStrata2015.mat)
+DatesStrata2015_Final <- dget(file = "Objects/DatesStrata2015_Final.txt")
+
+
+## Sample sizes
+# KMA2014_2015Strata_SampleSizes_Final <- KMA2014_2015Strata_SampleSizes[, "Final"]
+# LateLateStrata <- grep(pattern = "LateLate", x = names(KMA2014_2015Strata_SampleSizes_Final))
+# KMA2014_2015Strata_SampleSizes_Final[LateLateStrata-1] <- KMA2014_2015Strata_SampleSizes_Final[LateLateStrata-1] + KMA2014_2015Strata_SampleSizes_Final[LateLateStrata]
+# KMA2014_2015Strata_SampleSizes_Final_Condense <- KMA2014_2015Strata_SampleSizes_Final[-LateLateStrata]
+# dput(x = KMA2014_2015Strata_SampleSizes_Final_Condense, file = "Objects/KMA2014_2015Strata_SampleSizes_Final_Condense.txt")
+KMA2014_2015Strata_SampleSizes_Final_Condense <- dget(file = "Objects/KMA2014_2015Strata_SampleSizes_Final_Condense.txt")
+
+
+## Geographic headers
+# GeoHeader <- setNames(object = c(paste("Cape Alitak/Humpy Deadman Section (257-10,20,50,60,70)", sep = ''),
+#                                  paste("Ayakulik/Halibut Bay Section (256-10", "\u2013", "256-30)", sep = ''),
+#                                  paste("Karluk/Sturgeon Section (255-10", "\u2013", "255-20; 256-40)", sep = ''),
+#                                  paste("Uganik/Kupreanof Section (253)", sep = ''),
+#                                  paste("Uyak Bay Section (254)", sep = '')),
+#                       nm = unlist(strsplit(x = KMA2015, split = "15")))
+# dput(x = GeoHeader, file = "Objects/GeoHeader.txt")
+GeoHeader <- dget(file = "Objects/GeoHeader.txt")
+
+
+# Get Final Estimates Objects
+KMAfinalestimatesobjects <- list.files(path = "Estimates objects/Final", recursive = FALSE)
+invisible(sapply(KMAfinalestimatesobjects, function(objct) {assign(x = unlist(strsplit(x = objct, split = ".txt")), value = dget(file = paste("Estimates objects/Final", objct, sep = "/")), pos = 1) })); beep(2)
+KMAfinalestimatesobjects; rm(KMAfinalestimatesobjects)
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Defining caption variables
+
+EstimatesStats <- c(KMA2014Strata_EstimatesStats, KMA2014_Annual_EstimatesStats,
+                    KMA2015Strata_EstimatesStats, KMA2015_Annual_EstimatesStats)
+
+HarvestEstimatesStats <- c(KMA2014Strata_HarvestEstimatesStats, KMA2014_Annual_HarvestEstimatesStats,
+                           KMA2015Strata_HarvestEstimatesStats, KMA2015_Annual_HarvestEstimatesStats)
+
+SheetNames <- sort(names(EstimatesStats))
+names(SheetNames) <- SheetNames
+mixvec <- SheetNames
+
+
+# mix <- SheetNames[2]
+harvest <- rbind(HarvestByStrata2014_Final, HarvestByStrata2015_Final)
+dates <- rbind(DatesStrata2014_Final, DatesStrata2015_Final)
+sampsize <- KMA2014_2015Strata_SampleSizes_Final_Condense
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+require(xlsx)
+
+for(mix in SheetNames) {
+  
+  # String split by "_
+  SheetNames.split <- unlist(strsplit(x = mix, split = "_"))
+  
+  
+  # The first element is the geographic area + year
+  geomix <- SheetNames.split[1]
+  yr <- unlist(strsplit(x = geomix, split = "C"))[2]
+  geo <- unlist(strsplit(x = geomix, split = "1"))[1]
+  
+  
+  # If it is not an annual roll-up, then get the strata number + strata name
+  if(length(SheetNames.split) > 1) {
+    tempmix <- paste(c(SheetNames.split[2], SheetNames.split[3]), collapse = "_")
+    
+    Caption <- paste("Table X.-Estimates of stock composition (%) and stock-specific harvest for temporal stratum ",
+                     SheetNames.split[2], " (", dates[geomix, tempmix],
+                     "; Harvest=", formatC(x = harvest[geomix, tempmix], format = "f", digits = 0, big.mark = ","),
+                     "; n=", sampsize[mix], ")", " of the ", GeoHeader[geo], ", 20", yr,
+                     ". Estimates include median, 90% credibility interval (CI), the probability that the group estimate is equal to zero (P=0), mean, and SD.",
+                     sep = '')
+  } else {
+    Caption <- paste("Table X.-Annual estimates of stock composition (%) and stock-specific harvest for the ", GeoHeader[geo], ", 20", yr,
+                     ". Estimates include median, 90% credibility interval (CI), the probability that the group estimate is equal to zero (P=0), mean, and SD.",
+                     sep = '')
+  }
+  
+  Disclaimer <- "Note: Stock composition estimates may not sum to 100% and stock-specific harvest estimates may not sum to the total harvest due to rounding error."
+  
+  
+  TableX <- matrix(data = "", nrow = 20, ncol = 13)
+  
+  TableX[1, 1] <- Caption
+  TableX[2, c(2, 9)] <- c("Stock Composition", "Stock-specific Harvest")
+  TableX[3, c(3, 10)] <- rep("90% CI", 2)
+  TableX[4, c(1, 2:4, 6:7, 9:13, 5)] <- c("Reporting Group", rep(c("Median", "5%", "95%", "Mean", "SD"), 2), "P=0")
+  TableX[5:18, 1] <- groups10
+  TableX[5:18, c(2:4, 6:7)] <- formatC(x = EstimatesStats[[mix]][, c("median", "5%", "95%", "mean", "sd")] * 100, digits = 1, format = "f")
+  TableX[5:18, 5] <- formatC(x = EstimatesStats[[mix]][, "P=0"], digits = 2, format = "f")
+  TableX[5:18, 9:13] <- formatC(x = HarvestEstimatesStats[[mix]][, c("median", "5%", "95%", "mean", "sd")], digits = 0, format = "f", big.mark = ",")
+  TableX[19, 11:12] <- c("Total", formatC(x = sum(HarvestEstimatesStats[[mix]][, "mean"]), digits = 0, format = "f", big.mark = ","))
+  TableX[20, 1] <- Disclaimer
+  
+  
+  write.xlsx(x = as.data.frame(TableX), 
+             file = "Estimates tables/KMA Sockeye Estimates Tables.xlsx",
+             col.names = FALSE, row.names = FALSE, append = TRUE, sheetName = mix)
+}; beep(5)
+
+
+
+
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### 2016 Harvest Data ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 harvest16 <- read.csv(file = "Harvest/Salmon Catch by Day and Stat Area 2016 Date.csv", as.is = TRUE)
