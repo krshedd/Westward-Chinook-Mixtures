@@ -1663,6 +1663,101 @@ sapply(KMA2015[-4], function(geomix) {
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Bubble Charts ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Create a matrix of annual means
+#~~~~~~~~~~~~~~~~~~
+# 2014
+KMA2014_Annual_EstimatesStats <- dget(file = "Estimates objects/Final/KMA2014_Annual_EstimatesStats.txt")
+Annual2014_Stratified_Estimates <- sapply(KMA2014, function(geomix) {
+  KMA2014_Annual_EstimatesStats[[geomix]][, "mean"]
+})
+rownames(Annual2014_Stratified_Estimates) <- groups10short
+
+
+KMA2014_Annual_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2014_Annual_HarvestEstimatesStats.txt")
+Annual2014_Stratified_HarvestEstimates <- sapply(KMA2014, function(geomix) {
+  round(KMA2014_Annual_HarvestEstimatesStats[[geomix]][, "mean"])
+})
+rownames(Annual2014_Stratified_HarvestEstimates) <- groups10short
+
+
+
+#~~~~~~~~~~~~~~~~~~
+# 2015
+KMA2015_Annual_EstimatesStats <- dget(file = "Estimates objects/Final/KMA2015_Annual_EstimatesStats.txt")
+Annual2015_Stratified_Estimates <- sapply(KMA2015, function(geomix) {
+  KMA2015_Annual_EstimatesStats[[geomix]][, "mean"]
+})
+rownames(Annual2015_Stratified_Estimates) <- groups10short
+
+
+KMA2015_Annual_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2015_Annual_HarvestEstimatesStats.txt")
+Annual2015_Stratified_HarvestEstimates <- sapply(KMA2015, function(geomix) {
+  round(KMA2015_Annual_HarvestEstimatesStats[[geomix]][, "mean"])
+})
+rownames(Annual2015_Stratified_HarvestEstimates) <- groups10short
+
+
+
+require(lattice)
+new.colors <- colorRampPalette(c("white", "black"))
+levelplot(t(Annual2014_Stratified_Estimates[10:1, c(2, 3, 1, 4)]), col.regions = new.colors, xlab = "Reporting Group", 
+          ylab = "Fishery", main = "2014 Proportion", at = seq(0, 1, length.out = 100), aspect = "fill", 
+          scales = list(x = list(rot = 45)),
+          panel = function(...) {
+            panel.levelplot(...)
+          })
+
+require(lattice)
+new.colors <- colorRampPalette(c("white", "black"))
+levelplot(t(Annual2015_Stratified_Estimates[10:1, c(2, 3, 1, 4)]), col.regions = new.colors, xlab = "Reporting Group", 
+          ylab = "Fishery", main = "2015 Proportion", at = seq(0, 1, length.out = 100), aspect = "fill", 
+          scales = list(x = list(rot = 45)),
+          panel = function(...) {
+            panel.levelplot(...)
+          })
+
+
+
+require(ggplot2)
+require(reshape2)
+
+# 2014
+Annual2014_Stratified_HarvestEstimates_df <- melt(Annual2014_Stratified_HarvestEstimates)
+names(Annual2014_Stratified_HarvestEstimates_df) <- c("RG", "Fishery", "Harvest")
+Annual2014_Stratified_HarvestEstimates_df$RG <- factor(Annual2014_Stratified_HarvestEstimates_df$RG, levels = rev(groups10short))
+Annual2014_Stratified_HarvestEstimates_df$Fishery <- factor(Annual2014_Stratified_HarvestEstimates_df$Fishery, levels = KMA2014[c(2,3,1,4)])
+Annual2014_Stratified_HarvestEstimates_df$Color <- rep(rev(colors10), 4)
+str(Annual2014_Stratified_HarvestEstimates_df)
+
+ggplot(data = Annual2014_Stratified_HarvestEstimates_df, aes(x = Fishery, y = RG, size = Harvest, color = RG)) + geom_point() + scale_size_area(max_size = 25) + scale_color_manual(values = rev(rep(colors10, 4)))
+
+ggplot(data = Annual2014_Stratified_HarvestEstimates_df, aes(x = Fishery, y = RG, size = Harvest, color = RG)) + 
+  geom_point() + 
+  scale_size_continuous(limits = c(0, 1600), breaks = seq(500, 1500, 500), range = c(0, 25)) + 
+  scale_color_manual(values = rev(rep(colors10, 4))) +
+  ggtitle("2014 Harvest")
+
+
+# 2015
+Annual2015_Stratified_HarvestEstimates_df <- melt(Annual2015_Stratified_HarvestEstimates)
+names(Annual2015_Stratified_HarvestEstimates_df) <- c("RG", "Fishery", "Harvest")
+Annual2015_Stratified_HarvestEstimates_df$RG <- factor(Annual2015_Stratified_HarvestEstimates_df$RG, levels = rev(groups10short))
+Annual2015_Stratified_HarvestEstimates_df$Fishery <- factor(Annual2015_Stratified_HarvestEstimates_df$Fishery, levels = KMA2015[c(2,3,1,4)])
+Annual2015_Stratified_HarvestEstimates_df$Color <- rep(rev(colors10), 4)
+str(Annual2015_Stratified_HarvestEstimates_df)
+
+ggplot(data = Annual2015_Stratified_HarvestEstimates_df, aes(x = Fishery, y = RG, size = Harvest, color = RG)) + geom_point() + scale_size_area(max_size = 25) + scale_color_manual(values = rev(rep(colors10, 4)))
+
+ggplot(data = Annual2015_Stratified_HarvestEstimates_df, aes(x = Fishery, y = RG, size = Harvest, color = RG)) + 
+  geom_point() + 
+  scale_size_continuous(limits = c(0, 1600), breaks = seq(500, 1500, 500), range = c(0, 25)) + 
+  scale_color_manual(values = rev(rep(colors10, 4))) +
+  ggtitle("2015 Harvest")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### Plot Percentages for KMA Mixtures ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
