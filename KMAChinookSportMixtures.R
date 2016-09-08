@@ -422,7 +422,7 @@ PlotPosterior(mixvec = "KMARS14", output = KMARS14_Estimates$Output,
 ## Barplots
 file.copy(from = "V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Objects/QuickBarplot.txt",
           to = "Objects/QuickBarplot.txt")
-
+KMARS14_EstimatesStats <- dget(file = "Estimates objects/KMARS14_EstimatesStats.txt")
 QuickBarplot(mixvec = "KMARS14", estimatesstats = KMARS14_EstimatesStats, groups = groups10, groups2rows = groups10tworows, header = KMARS14_Header)
 
 
@@ -508,6 +508,7 @@ PlotPosterior(mixvec = "KMARS15", output = KMARS15_Estimates$Output,
 #### Plot Round 2 Results ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Barplots
+KMARS15_EstimatesStats <- dget(file = "Estimates objects/KMARS15_EstimatesStats.txt")
 QuickBarplot(mixvec = "KMARS15", estimatesstats = KMARS15_EstimatesStats, groups = groups10, groups2rows = groups10tworows, header = KMARS15_Header)
 
 ## Make violin plots of posteriors with RGs sorted
@@ -517,3 +518,291 @@ rm(KMARS15_Estimates)
 # Are 2014 and 2015 different?
 KMARS14vs15 <- compare_comps_between.GCL(mixnames = c("KMARS14", "KMARS15"), groupnames = groups10, mixdir = "BAYES/Output")
 str(KMARS14vs15)
+
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Plot Percentages for KMA Mixtures ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+KMARS14_EstimatesStats <- dget(file = "Estimates objects/KMARS14_EstimatesStats.txt")
+KMARS15_EstimatesStats <- dget(file = "Estimates objects/KMARS15_EstimatesStats.txt")
+
+str(KMARS14_EstimatesStats)
+
+# Three barplot layout
+layoutmat <- matrix(data=c(  1, 2,
+                             1, 3,
+                             1, 4,
+                             5, 6), nrow = 4, ncol = 2, byrow = TRUE)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+GeoMix <- c("KALITC", "KEASTC", "KWESTC", "KMAINC")
+
+filenames <- setNames(object = c("SW Kodiak Alitak Proportions 2014-2016", 
+                                 "Eastside Proportions 2014-2016",
+                                 "Westside Proportions 2014-2016",
+                                 "Mainland Proportions 2014-2016"), nm = GeoMix)
+
+# If showing proportions (percetages) use blue, otherwise green as "low"
+ProportionColors <- colorpanel(n = 2, low = "blue", high = "white")
+
+
+#~~~~~~~~~~~~~~~~~~
+# 2014
+TempMix14 <- sapply(KMA2014, function(geo) {grep(pattern = geo, x = names(KMA2014Strata_EstimatesStats), value = TRUE)}, simplify = FALSE)
+
+Legend14 <- setNames(object = c("June 1-July 5", "July 6-August 5"), 
+                     nm = c("1_Early", "2_Late"))
+TempLegend14 <- sapply(KMA2014, function(geo) {
+  Legend14[sapply(TempMix14[[geo]], function(strata) {unlist(strsplit(x = strata, split = paste(geo, "_", sep = '')))[2]} )]
+}, simplify = FALSE)
+
+
+TempProportionColors14 <- sapply(KMA2014, function(geo) {
+  ProportionColors[sapply(TempMix14[[geo]], function(strata) {as.numeric(unlist(strsplit(x = strata, split = "_"))[2])} )]
+}, simplify = FALSE)
+
+Estimates14 <- KMA2014Strata_EstimatesStats
+
+#~~~~~~~~~~~~~~~~~~
+# 2015
+TempMix15 <- sapply(KMA2015, function(geo) {grep(pattern = geo, x = names(KMA2015Strata_EstimatesStats), value = TRUE)}, simplify = FALSE)
+
+Legend15 <- setNames(object = c("June 1-July 5", "July 6-August 5"), 
+                     nm = c("1_Early", "2_Late"))
+TempLegend15 <- sapply(KMA2015, function(geo) {
+  Legend15[sapply(TempMix15[[geo]], function(strata) {unlist(strsplit(x = strata, split = paste(geo, "_", sep = '')))[2]} )]
+}, simplify = FALSE)
+
+
+TempProportionColors15 <- sapply(KMA2015, function(geo) {
+  ProportionColors[sapply(TempMix15[[geo]], function(strata) {as.numeric(unlist(strsplit(x = strata, split = "_"))[2])} )]
+}, simplify = FALSE)
+
+Estimates15 <- KMA2015Strata_EstimatesStats
+
+#~~~~~~~~~~~~~~~~~~
+# 2016
+# TempMix16 <- sapply(KMA2016, function(geo) {grep(pattern = geo, x = names(KMA2016Strata_EstimatesStats), value = TRUE)}, simplify = FALSE)
+# 
+# Legend16 <- setNames(object = c("June 1-27", "June 28-July 25", "July 26-August 29"), 
+#                      nm = c("1_Early", "2_Middle", "3_Late"))
+# TempLegend16 <- sapply(KMA2016, function(geo) {
+#   Legend16[sapply(TempMix16[[geo]], function(strata) {unlist(strsplit(x = strata, split = paste(geo, "_", sep = '')))[2]} )]
+# }, simplify = FALSE)
+# 
+# 
+# TempProportionColors16 <- sapply(KMA2016, function(geo) {
+#   ProportionColors[sapply(TempMix16[[geo]], function(strata) {as.numeric(unlist(strsplit(x = strata, split = "_"))[2])} )]
+# }, simplify = FALSE)
+# 
+# Estimates16 <- KMA2016Strata_EstimatesStats
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#~~~~~~~~~~~~~~~~~~
+# Size Parameters
+Groups <- groups10
+Groups2Rows <- groups10tworows
+cex.lab <- 1.5
+cex.xaxis <- 0.5
+cex.yaxis <- 1.3
+cex.leg <- 1.1
+ci.lwd <- 2.5
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Make figures as .emf files
+
+# dir.create("Figures")
+require(devEMF)
+require(gplots)
+
+
+emf(file = paste("Figures/KMA Sport Proportions 2014-2016.emf", sep = ''), width = 6, height = 5.75, family = "sans", bg = "white")
+
+
+layout(mat = layoutmat, widths = c(0.075, 1, 1), heights = c(0.9, 0.9, 1, 0.1))
+par(mar = rep(0, 4))
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Y-axis label
+plot.new()
+text(x = 0.25, y = 0.5, labels = "Percentage of Catch", srt = 90, cex = cex.lab)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## 2014 Barplot
+tempmix <- "KMARS14"
+par(mar = c(1, 1, 1, 1))
+Barplot14 <- barplot2(height = KMARS14_EstimatesStats[[tempmix]][, "median"] * 100, 
+                      beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                      ci.l = KMARS14_EstimatesStats[[tempmix]][, "5%"] * 100, 
+                      ci.u = KMARS14_EstimatesStats[[tempmix]][, "95%"] * 100, 
+                      ylim = c(0, 100), col = "blue", yaxt = "n", xaxt = 'n')
+axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+legend(legend = "April 16-August 29", x = "topleft", fill = "blue", border = "black", bty = "n", cex = cex.leg, title="2014")
+abline(h = 0, xpd = FALSE)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## 2015 Barplot
+tempmix <- "KMARS15"
+par(mar = c(1, 1, 1, 1))
+Barplot14 <- barplot2(height = KMARS15_EstimatesStats[[tempmix]][, "median"] * 100, 
+                      beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                      ci.l = KMARS15_EstimatesStats[[tempmix]][, "5%"] * 100, 
+                      ci.u = KMARS15_EstimatesStats[[tempmix]][, "95%"] * 100, 
+                      ylim = c(0, 100), col = "blue", yaxt = "n", xaxt = 'n')
+axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+legend(legend = "May 17-August 14", x = "topleft", fill = "blue", border = "black", bty = "n", cex = cex.leg, title="2015")
+abline(h = 0, xpd = FALSE)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## 2016 Barplot
+
+par(mar = c(2, 1, 1, 1))
+Barplot16 <- barplot2(height = rep(0, length(Groups)),
+                      beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                      ci.l = rep(0, length(Groups)),
+                      ci.u = rep(0, length(Groups)),
+                      ylim = c(0, 100), col = "black", yaxt = "n", xaxt = 'n')
+axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+legend(legend = "May 17-August 13", x = "topleft", fill = "blue", border = "black", bty = "n", cex = cex.leg, title="2016")
+abline(h = 0, xpd = FALSE)
+
+# tempmix <- "KMARS16"
+# par(mar = c(1, 1, 1, 1))
+# Barplot14 <- barplot2(height = KMARS16_EstimatesStats[[tempmix]][, "median"] * 100, 
+#                       beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+#                       ci.l = KMARS16_EstimatesStats[[tempmix]][, "5%"] * 100, 
+#                       ci.u = KMARS16_EstimatesStats[[tempmix]][, "95%"] * 100, 
+#                       ylim = c(0, 100), col = "blue", yaxt = "n", xaxt = 'n')
+# axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+# legend(legend = "May 17-August 14", x = "topleft", fill = "blue", border = "black", bty = "n", cex = cex.leg, title="2016")
+# abline(h = 0, xpd = FALSE)
+
+# 
+mtext(text = Groups2Rows, side = 1, line = 1, at = Barplot16, adj = 0.5, cex = cex.xaxis)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Blank Corner
+par(mar = rep(0, 4))
+plot.new()
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## x-axis label
+par(mar = rep(0, 4))
+plot.new()
+text(x = 0.5, y = 0.5, labels = "Reporting Group", cex = cex.lab)
+
+
+dev.off()
+
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Table results ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+require(xlsx)
+# dir.create("Estimates tables")
+
+
+# 2014
+Caption <- paste0("Table X.-Annual estimates of stock composition (%) for the Kodiak Area Sport Fishery, 2014. Estimates include median, 90% credibility interval (CI), the probability that the group estimate is equal to zero (P=0), mean, and SD.")
+
+Disclaimer <- "Note: Stock composition estimates may not sum to 100% due to rounding error."
+
+
+TableX <- matrix(data = "", nrow = 16, ncol = 7)
+
+TableX[1, 1] <- Caption
+TableX[2, 2] <- "Stock Composition"
+TableX[3, 3] <- "90% CI"
+TableX[4, c(1, 2:4, 6:7, 5)] <- c("Reporting Group", c("Median", "5%", "95%", "Mean", "SD"), "P=0")
+TableX[5:14, 1] <- groups10
+TableX[5:14, c(2:4, 6:7)] <- formatC(x = KMARS14_EstimatesStats[["KMARS14"]][, c("median", "5%", "95%", "mean", "sd")] * 100, digits = 1, format = "f")
+TableX[5:14, 5] <- formatC(x = KMARS14_EstimatesStats[["KMARS14"]][, "P=0"], digits = 2, format = "f")
+TableX[16, 1] <- Disclaimer
+
+
+write.xlsx(x = as.data.frame(TableX), 
+           file = "Estimates tables/KMA Chinook Estimates Tables.xlsx",
+           col.names = FALSE, row.names = FALSE, append = TRUE, sheetName = "KMARS14")
+
+
+
+# 2015
+Caption <- paste0("Table X.-Annual estimates of stock composition (%) for the Kodiak Area Sport Fishery, 2015. Estimates include median, 90% credibility interval (CI), the probability that the group estimate is equal to zero (P=0), mean, and SD.")
+
+Disclaimer <- "Note: Stock composition estimates may not sum to 100% due to rounding error."
+
+
+TableX <- matrix(data = "", nrow = 16, ncol = 7)
+
+TableX[1, 1] <- Caption
+TableX[2, 2] <- "Stock Composition"
+TableX[3, 3] <- "90% CI"
+TableX[4, c(1, 2:4, 6:7, 5)] <- c("Reporting Group", c("Median", "5%", "95%", "Mean", "SD"), "P=0")
+TableX[5:14, 1] <- groups10
+TableX[5:14, c(2:4, 6:7)] <- formatC(x = KMARS15_EstimatesStats[["KMARS15"]][, c("median", "5%", "95%", "mean", "sd")] * 100, digits = 1, format = "f")
+TableX[5:14, 5] <- formatC(x = KMARS15_EstimatesStats[["KMARS15"]][, "P=0"], digits = 2, format = "f")
+TableX[16, 1] <- Disclaimer
+
+
+write.xlsx(x = as.data.frame(TableX), 
+           file = "Estimates tables/KMA Chinook Estimates Tables.xlsx",
+           col.names = FALSE, row.names = FALSE, append = TRUE, sheetName = "KMARS15")
+
+
+
+# 2016
+Caption <- paste0("Table X.-Annual estimates of stock composition (%) for the Kodiak Area Sport Fishery, 2016. Estimates include median, 90% credibility interval (CI), the probability that the group estimate is equal to zero (P=0), mean, and SD.")
+
+Disclaimer <- "Note: Stock composition estimates may not sum to 100% due to rounding error."
+
+
+TableX <- matrix(data = "", nrow = 16, ncol = 7)
+
+TableX[1, 1] <- Caption
+TableX[2, 2] <- "Stock Composition"
+TableX[3, 3] <- "90% CI"
+TableX[4, c(1, 2:4, 6:7, 5)] <- c("Reporting Group", c("Median", "5%", "95%", "Mean", "SD"), "P=0")
+TableX[5:14, 1] <- groups10
+TableX[5:14, c(2:4, 6:7)] <- formatC(x = KMARS16_EstimatesStats[["KMARS16"]][, c("median", "5%", "95%", "mean", "sd")] * 100, digits = 1, format = "f")
+TableX[5:14, 5] <- formatC(x = KMARS16_EstimatesStats[["KMARS16"]][, "P=0"], digits = 2, format = "f")
+TableX[16, 1] <- Disclaimer
+
+
+write.xlsx(x = as.data.frame(TableX), 
+           file = "Estimates tables/KMA Chinook Estimates Tables.xlsx",
+           col.names = FALSE, row.names = FALSE, append = TRUE, sheetName = "KMARS16")
