@@ -1488,6 +1488,7 @@ harvest15$Geo <- ifelse(harvest15$Stat.Area %in% Stat.Area.Mainland, "Mainland",
 table(harvest15$Strata, harvest15$Geo)
 
 require(plyr)
+require(reshape)
 ddply(.data = harvest15, ~Geo+Strata, summarise, harvest = sum(Number))
 daply(.data = harvest15, ~Geo+Strata, summarise, harvest = sum(Number))
 
@@ -2038,37 +2039,31 @@ sapply(GeoMix, function(geomix) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ## Dates
-# DatesStrata2014 <- read.table(file = "Harvest/2014DatesByStrata.txt", header = TRUE, sep = "\t", as.is = TRUE)
-# DatesStrata2014.mat <- as.matrix(DatesStrata2014[-1])
-# dimnames(DatesStrata2014.mat) <- list(DatesStrata2014$location, c("1_Early", "2_Middle", "3_Late"))
-# dput(x = DatesStrata2014.mat, file = "Objects/DatesStrata2014_Final.txt"); rm(DatesStrata2014.mat)
+DatesStrata2014_Final <- matrix(data = c(rep("June 1-July 5", 3), "", rep("July 6-August 5", 4)), 
+                                nrow = 4, ncol = 2, byrow = FALSE, dimnames = list(KMA2014, c("1_Early", "2_Late")))
+dput(x = DatesStrata2014_Final, file = "Objects/DatesStrata2014_Final.txt")
 DatesStrata2014_Final <- dget(file = "Objects/DatesStrata2014_Final.txt")
 
 
-# DatesStrata2015 <- read.table(file = "Harvest/2015DatesByStrata.txt", header = TRUE, sep = "\t", as.is = TRUE)
-# DatesStrata2015.mat <- as.matrix(DatesStrata2015[-1])
-# dimnames(DatesStrata2015.mat) <- list(DatesStrata2015$location, c("1_Early", "2_Middle", "3_Late"))
-# dput(x = DatesStrata2015.mat, file = "Objects/DatesStrata2015_Final.txt"); rm(DatesStrata2015.mat)
+DatesStrata2015_Final <- matrix(data = c(rep("June 1-July 5", 3), "", rep("July 6-August 5", 4)), 
+                                nrow = 4, ncol = 2, byrow = FALSE, dimnames = list(KMA2015, c("1_Early", "2_Late")))
+dput(x = DatesStrata2015_Final, file = "Objects/DatesStrata2015_Final.txt")
 DatesStrata2015_Final <- dget(file = "Objects/DatesStrata2015_Final.txt")
 
 
 ## Sample sizes
-# KMA2014_2015Strata_SampleSizes_Final <- KMA2014_2015Strata_SampleSizes[, "Final"]
-# LateLateStrata <- grep(pattern = "LateLate", x = names(KMA2014_2015Strata_SampleSizes_Final))
-# KMA2014_2015Strata_SampleSizes_Final[LateLateStrata-1] <- KMA2014_2015Strata_SampleSizes_Final[LateLateStrata-1] + KMA2014_2015Strata_SampleSizes_Final[LateLateStrata]
-# KMA2014_2015Strata_SampleSizes_Final_Condense <- KMA2014_2015Strata_SampleSizes_Final[-LateLateStrata]
-# dput(x = KMA2014_2015Strata_SampleSizes_Final_Condense, file = "Objects/KMA2014_2015Strata_SampleSizes_Final_Condense.txt")
-KMA2014_2015Strata_SampleSizes_Final_Condense <- dget(file = "Objects/KMA2014_2015Strata_SampleSizes_Final_Condense.txt")
+KMA2014_2015Strata_SampleSizes_Final <- KMA2014_2015Strata_SampleSizes[, "Final"]
+dput(x = KMA2014_2015Strata_SampleSizes_Final, file = "Objects/KMA2014_2015Strata_SampleSizes_Final.txt")
+KMA2014_2015Strata_SampleSizes_Final <- dget(file = "Objects/KMA2014_2015Strata_SampleSizes_Final.txt")
 
 
 ## Geographic headers
-# GeoHeader <- setNames(object = c(paste("Cape Alitak/Humpy Deadman Section (257-10,20,50,60,70)", sep = ''),
-#                                  paste("Ayakulik/Halibut Bay Section (256-10", "\u2013", "256-30)", sep = ''),
-#                                  paste("Karluk/Sturgeon Section (255-10", "\u2013", "255-20; 256-40)", sep = ''),
-#                                  paste("Uganik/Kupreanof Section (253)", sep = ''),
-#                                  paste("Uyak Bay Section (254)", sep = '')),
-#                       nm = unlist(strsplit(x = KMA2015, split = "15")))
-# dput(x = GeoHeader, file = "Objects/GeoHeader.txt")
+GeoHeader <- setNames(object = c(paste0("SW Kodiak/Alitak (District 255, 256, 257)"),
+                                 paste0("Eastside Kodiak/Afognak (District 252, 258, 259)"),
+                                 paste0("Westside Kodiak/Afognak (District 251, 253, 254)"),
+                                 paste0("Mainland (District 262)")),
+                      nm = unlist(strsplit(x = KMA2015, split = "15")))
+dput(x = GeoHeader, file = "Objects/GeoHeader.txt")
 GeoHeader <- dget(file = "Objects/GeoHeader.txt")
 
 
@@ -2094,14 +2089,14 @@ mixvec <- SheetNames
 
 
 # mix <- SheetNames[2]
-harvest <- rbind(HarvestByStrata2014_Final, HarvestByStrata2015_Final)
+harvest <- rbind(HarvestByStrata2014, HarvestByStrata2015)
 dates <- rbind(DatesStrata2014_Final, DatesStrata2015_Final)
-sampsize <- KMA2014_2015Strata_SampleSizes_Final_Condense
+sampsize <- KMA2014_2015Strata_SampleSizes_Final
 
-
+SheetNames <- SheetNames[-which(SheetNames == "KSPENCHIG14")]
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+# dir.create("Estimates tables")
 require(xlsx)
 
 for(mix in SheetNames) {
@@ -2135,29 +2130,51 @@ for(mix in SheetNames) {
   Disclaimer <- "Note: Stock composition estimates may not sum to 100% and stock-specific harvest estimates may not sum to the total harvest due to rounding error."
   
   
-  TableX <- matrix(data = "", nrow = 20, ncol = 13)
+  TableX <- matrix(data = "", nrow = 16, ncol = 13)
   
   TableX[1, 1] <- Caption
   TableX[2, c(2, 9)] <- c("Stock Composition", "Stock-specific Harvest")
   TableX[3, c(3, 10)] <- rep("90% CI", 2)
   TableX[4, c(1, 2:4, 6:7, 9:13, 5)] <- c("Reporting Group", rep(c("Median", "5%", "95%", "Mean", "SD"), 2), "P=0")
-  TableX[5:18, 1] <- groups10
-  TableX[5:18, c(2:4, 6:7)] <- formatC(x = EstimatesStats[[mix]][, c("median", "5%", "95%", "mean", "sd")] * 100, digits = 1, format = "f")
-  TableX[5:18, 5] <- formatC(x = EstimatesStats[[mix]][, "P=0"], digits = 2, format = "f")
-  TableX[5:18, 9:13] <- formatC(x = HarvestEstimatesStats[[mix]][, c("median", "5%", "95%", "mean", "sd")], digits = 0, format = "f", big.mark = ",")
-  TableX[19, 11:12] <- c("Total", formatC(x = sum(HarvestEstimatesStats[[mix]][, "mean"]), digits = 0, format = "f", big.mark = ","))
-  TableX[20, 1] <- Disclaimer
+  TableX[5:14, 1] <- groups10
+  TableX[5:14, c(2:4, 6:7)] <- formatC(x = EstimatesStats[[mix]][, c("median", "5%", "95%", "mean", "sd")] * 100, digits = 1, format = "f")
+  TableX[5:14, 5] <- formatC(x = EstimatesStats[[mix]][, "P=0"], digits = 2, format = "f")
+  TableX[5:14, 9:13] <- formatC(x = HarvestEstimatesStats[[mix]][, c("median", "5%", "95%", "mean", "sd")], digits = 0, format = "f", big.mark = ",")
+  TableX[15, 11:12] <- c("Total", formatC(x = sum(HarvestEstimatesStats[[mix]][, "mean"]), digits = 0, format = "f", big.mark = ","))
+  TableX[16, 1] <- Disclaimer
   
   
   write.xlsx(x = as.data.frame(TableX), 
-             file = "Estimates tables/KMA Sockeye Estimates Tables.xlsx",
+             file = "Estimates tables/KMA Chinook Estimates Tables.xlsx",
              col.names = FALSE, row.names = FALSE, append = TRUE, sheetName = mix)
 }; beep(5)
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Chignik South Pen on its own, no expansion to harvest
+mix <- setNames(object = "KSPENCHIG14", nm = "KSPENCHIG14")
+
+# If it is not an annual roll-up, then get the strata number + strata name
+Caption <- paste0("Table X.-Annual estimates of stock composition (%) for the South Peninsula / Chignik Outside (District 282, 283, 284, 285, 272, 273, 275), 2014. Estimates include median, 90% credibility interval (CI), the probability that the group estimate is equal to zero (P=0), mean, and SD.")
+
+Disclaimer <- "Note: Stock composition estimates may not sum to 100% due to rounding error."
 
 
+TableX <- matrix(data = "", nrow = 16, ncol = 7)
+
+TableX[1, 1] <- Caption
+TableX[2, 2] <- "Stock Composition"
+TableX[3, 3] <- "90% CI"
+TableX[4, c(1, 2:4, 6:7, 5)] <- c("Reporting Group", c("Median", "5%", "95%", "Mean", "SD"), "P=0")
+TableX[5:14, 1] <- groups10
+TableX[5:14, c(2:4, 6:7)] <- formatC(x = EstimatesStats[[mix]][, c("median", "5%", "95%", "mean", "sd")] * 100, digits = 1, format = "f")
+TableX[5:14, 5] <- formatC(x = EstimatesStats[[mix]][, "P=0"], digits = 2, format = "f")
+TableX[16, 1] <- Disclaimer
 
 
+write.xlsx(x = as.data.frame(TableX), 
+           file = "Estimates tables/KMA Chinook Estimates Tables.xlsx",
+           col.names = FALSE, row.names = FALSE, append = TRUE, sheetName = mix)
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
