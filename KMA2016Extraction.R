@@ -1,6 +1,6 @@
 rm(list = ls())
 setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Extraction")
-load(file = "KMA2016Extraction.RData")
+load(file = "V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures/Github-Westward-Chinook-Mixtures/KMA2016Extraction.RData")
 
 # Had to remove an "X" in the "XTR" column that had "NO VIALS"
 
