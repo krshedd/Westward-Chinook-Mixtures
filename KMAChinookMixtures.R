@@ -2364,6 +2364,14 @@ KSPENCHIG14.gcl$attributes$Size <- as.numeric(readClipboard())
 KSPENCHIG14.gcl$attributes$Size[KSPENCHIG14.gcl$attributes$Size == 0] <- NA
 
 
+# Pair sex data based on fish ID (vial)
+KSPENCHIG14.gcl$attributes$Sex <- as.numeric(readClipboard())
+KSPENCHIG14.gcl$attributes$Sex[KSPENCHIG14.gcl$attributes$Sex == 0] <- NA
+
+table(KSPENCHIG14.gcl$attributes$Sex, KSPENCHIG14.gcl$attributes$maxIA)
+
+
+
 hist(KSPENCHIG14.gcl$attributes$Size, breaks = seq(300, 1000, 20), col = 8)
 
 
