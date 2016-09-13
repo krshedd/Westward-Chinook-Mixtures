@@ -2328,3 +2328,72 @@ daply(.data = harvest16, ~Geo+Strata, summarise, harvest = sum(Number))
 aggregate(harvest16$Number, by = list(harvest16$Strata, harvest16$Geo), FUN = sum)
 
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### South Pen Chignik 2014 Individual Assignment ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+KSPENCHIG14_IA <- IndividualAssignmentSummary.GCL(GroupNames = groups10short, groupvec = groupvec10, mixnames = "KSPENCHIG14", BAYESoutputDir = "BAYES/Output", nchains = 5, nreps = 40000, burn = 1/2, thin = 100)
+str(KSPENCHIG14_IA)
+
+# Plot Indivdiual Assignment probabilites
+require(lattice)
+new.colors <- colorRampPalette(c("white", "black"))
+levelplot(t(KSPENCHIG14_IA$KSPENCHIG14), 
+          col.regions = new.colors, 
+          at = seq(from = 0, to = 1, length.out = 100), 
+          main = "Individual Assignment", xlab = "Group", ylab = "Ind", 
+          scales = list(x = list(rot = 90)), 
+          aspect = "fill")  # aspect = "iso" will make squares
+
+apply(KSPENCHIG14_IA$KSPENCHIG14, 2, hist)
+
+
+# Assign individuals to most likely
+KSPENCHIG14.gcl$attributes$maxIA <- groups10short[apply(KSPENCHIG14_IA$KSPENCHIG14, 1, which.max)]
+
+# Create Temporal Strata
+KSPENCHIG14.gcl$attributes$MESH_SIZE_COMMENT <- ifelse(as.Date(KSPENCHIG14.gcl$attributes$CAPTURE_DATE) < as.Date("2014-06-30"), "Early", "Late")
+
+# View IA by Spatio-Temporal Strata
+table(KSPENCHIG14.gcl$attributes$maxIA, KSPENCHIG14.gcl$attributes$CAPTURE_LOCATION, KSPENCHIG14.gcl$attributes$MESH_SIZE_COMMENT)
+
+# Write fish ID
+writeClipboard(sapply(KSPENCHIG14.gcl$attributes$SillySource, function(x) {unlist(strsplit(x = x, split = "_"))[2]}))
+
+# Pair size data based on fish ID (vial)
+KSPENCHIG14.gcl$attributes$Size <- as.numeric(readClipboard())
+KSPENCHIG14.gcl$attributes$Size[KSPENCHIG14.gcl$attributes$Size == 0] <- NA
+
+
+hist(KSPENCHIG14.gcl$attributes$Size, breaks = seq(300, 1000, 20), col = 8)
+
+
+hist(KSPENCHIG14.gcl$attributes$Size, breaks = seq(300, 1000, 20), col = 8, main = "Histogram of Size for\nSouthPen Chignik 2014 Mixture", xlab = "Size (mm)")
+hist(KSPENCHIG14.gcl$attributes$Size[KSPENCHIG14.gcl$attributes$maxIA == "CWAK / Yukon"], breaks = seq(300, 1000, 20), col = 4, add = TRUE)
+legend("topleft", legend = c("All MSA Samples", "CWAK / Yukon"), fill = c(8, 4), bty = "n")
+
+hist(KSPENCHIG14.gcl$attributes$Size, breaks = seq(300, 1000, 20), col = 8, main = "Histogram of Size for\nSouthPen Chignik 2014 Mixture", xlab = "Size (mm)")
+hist(KSPENCHIG14.gcl$attributes$Size[KSPENCHIG14.gcl$attributes$maxIA == "CWAK / Yukon"], breaks = seq(300, 1000, 20), col = 2, add = TRUE)
+hist(KSPENCHIG14.gcl$attributes$Size[KSPENCHIG14.gcl$attributes$maxIA == "CWAK / Yukon" & KSPENCHIG14.gcl$attributes$MESH_SIZE_COMMENT == "Late"], breaks = seq(300, 1000, 20), col = 4, add = TRUE)
+legend("topleft", legend = c("All MSA Samples", "CWAK / Yukon Early", "CWAK / Yukon Late"), fill = c(8, 2, 4), bty = "n")
+
+hist(KSPENCHIG14.gcl$attributes$Size, breaks = seq(300, 1000, 20), col = 8, main = "Histogram of Size for\nSouthPen Chignik 2014 Mixture", xlab = "Size (mm)")
+hist(KSPENCHIG14.gcl$attributes$Size[KSPENCHIG14.gcl$attributes$maxIA == "CWAK / Yukon" & KSPENCHIG14.gcl$attributes$MESH_SIZE_COMMENT == "Early"], breaks = seq(300, 1000, 20), col = rgb(1,0,0,0.5), add = TRUE)
+hist(KSPENCHIG14.gcl$attributes$Size[KSPENCHIG14.gcl$attributes$maxIA == "CWAK / Yukon" & KSPENCHIG14.gcl$attributes$MESH_SIZE_COMMENT == "Late"], breaks = seq(300, 1000, 20), col = rgb(0,0,1,0.5), add = TRUE)
+legend("topleft", legend = c("All MSA Samples", "CWAK / Yukon Early", "CWAK / Yukon Late"), fill = c(8, 2, 4), bty = "n")
+
+
+
+hist(KSPENCHIG14.gcl$attributes$Size, breaks = seq(300, 1000, 20), col = 4, main = "Histogram of Size for\nSouthPen Chignik 2014 Mixture", xlab = "Size (mm)")
+hist(KSPENCHIG14.gcl$attributes$Size[KSPENCHIG14.gcl$attributes$MESH_SIZE_COMMENT == "Early"], breaks = seq(300, 1000, 20), col = 2, add = TRUE)
+legend("topleft", legend = c("Early", "Late"), fill = c(2, 4), bty = "n")
+
+
+
+
+
+
+hist(KSPENCHIG14.gcl$attributes$Size[KSPENCHIG14.gcl$attributes$CAPTURE_LOCATION %in% c("SE/South Central", "Unimak/Southwestern")], breaks = seq(300, 1000, 20), col = 8, main = "Histogram of Size for\nonly SouthPen fish in 2014 Mixture", xlab = "Size (mm)")
+hist(KSPENCHIG14.gcl$attributes$Size[KSPENCHIG14.gcl$attributes$maxIA == "CWAK / Yukon" & KSPENCHIG14.gcl$attributes$CAPTURE_LOCATION %in% c("SE/South Central", "Unimak/Southwestern")], breaks = seq(300, 1000, 20), col = 2, add = TRUE)
+hist(KSPENCHIG14.gcl$attributes$Size[KSPENCHIG14.gcl$attributes$maxIA == "CWAK / Yukon" & KSPENCHIG14.gcl$attributes$CAPTURE_LOCATION %in% c("SE/South Central", "Unimak/Southwestern") & KSPENCHIG14.gcl$attributes$MESH_SIZE_COMMENT == "Late"], breaks = seq(300, 1000, 20), col = 4, add = TRUE)
+legend("topleft", legend = c("All MSA Samples", "CWAK / Yukon Early", "CWAK / Yukon Late"), fill = c(8, 2, 4), bty = "n")
+
