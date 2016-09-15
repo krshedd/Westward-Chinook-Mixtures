@@ -877,7 +877,7 @@ dir.create("Figures/2014")
 require(devEMF)
 
 sapply(names(TempMix14), function(geomix) {
-  emf(file = paste("Figures/2014/", geomix, ".emf", sep = ''), width = 8.5, height = 6.5, family = "sans", bg = "white")
+  emf(file = paste("Figures/2014/", geomix, ".emf", sep = ''), width = 8.5, height = 6.5, family = "serif", bg = "white")
   par(mar = c(2.1, 4.1, 2.6, 0.6))
   
   Barplot1 <- barplot2(height = t(sapply(TempMix14[[geomix]], function(tempmix) {Estimates[[tempmix]][, "median"]})) * 100, 
@@ -898,11 +898,75 @@ sapply(names(TempMix14), function(geomix) {
 
 
 
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Size Parameters
+Groups <- groups10
+Groups2Rows <- groups10tworows
+cex.lab <- 1.5
+cex.xaxis <- 0.5
+cex.yaxis <- 1.3
+cex.leg <- 1.1
+ci.lwd <- 2.5
+
+
+emf(file = paste("Figures/2014/", geomix, ".emf", sep = ''), width = 6, height = 5.75, family = "serif", bg = "white")
+
+# Three barplot layout
+layoutmat <- matrix(data=c(  1, 2,
+                             3, 4), nrow = 2, ncol = 2, byrow = TRUE)
+
+layout(mat = layoutmat, widths = c(0.075, 1, 1), heights = c(1, 0.1))
+par(mar = rep(0, 4))
+par(family = "times")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Y-axis label
+plot.new()
+text(x = 0.25, y = 0.5, labels = "Percentage of Catch", srt = 90, cex = cex.lab)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## 2014 Barplot
+Estimates <- KMA2014Strata_EstimatesStats
+geomix = "KSPENCHIG14"
+par(mar = c(1, 1, 1, 1))
+Barplot14 <- barplot2(height = t(Estimates[[geomix]][, "median"]) * 100, 
+                      beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                      ci.l = t(Estimates[[geomix]][, "5%"]) * 100, 
+                      ci.u = t(Estimates[[geomix]][, "95%"]) * 100, 
+                      ylim = c(0, 100), col = "blue", yaxt = "n", xaxt = 'n')
+axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+legend(legend = "June 1-August 5", x = "topleft", fill = "blue", border = "black", bty = "n", cex = cex.leg, title="2014")
+abline(h = 0, xpd = FALSE)
+
+mtext(text = Groups2Rows, side = 1, line = 1, at = apply(Barplot14, 2, mean), adj = 0.5, cex = cex.xaxis)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Blank Corner
+par(mar = rep(0, 4))
+plot.new()
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## x-axis label
+par(mar = rep(0, 4))
+plot.new()
+text(x = 0.5, y = 0.5, labels = "Reporting Group", cex = cex.lab)
+
+
+dev.off()
+
+
+
+
+
+
+
 
 Estimates <- KMA2014Strata_EstimatesStats
 geomix = "KSPENCHIG14"
 
-emf(file = paste("Figures/2014/", geomix, ".emf", sep = ''), width = 8.5, height = 6.5, family = "sans", bg = "white")
+emf(file = paste("Figures/2014/", geomix, ".emf", sep = ''), width = 6, height = 5.75, family = "times", bg = "white")
 par(mar = c(2.1, 4.1, 2.6, 0.6))
 
 Barplot1 <- barplot2(height = t(Estimates[[geomix]][, "median"]) * 100, 
@@ -916,7 +980,7 @@ abline(h = 0, xpd = FALSE)
 
 mtext(text = "Percentage of Catch", side = 2, cex = cex.yaxis, line = 3)
 mtext(text = Groups2Rows, side = 1, line = 1, at = apply(Barplot1, 2, mean), adj = 0.5, cex = cex.xaxis)
-mtext(text = paste0("South Peninsula/Chignik Outside 282", "\u2013", "285; 272, 273, 275"), side = 3, cex = cex.main, line = 1)
+mtext(text = paste0("South Peninsula / Chignik Outside 282", "\u2013", "285; 272, 273, 275"), side = 3, cex = cex.main, line = 1)
 dev.off()
 
 
@@ -1048,7 +1112,7 @@ ci.lwd <- 2.5
 ymax <- 1500
 
 sapply(names(TempMix14), function(geomix) {
-  emf(file = paste("Figures/2014/", geomix, "Harvest.emf", sep = ''), width = 8.5, height = 6.5, family = "sans", bg = "white")
+  emf(file = paste("Figures/2014/", geomix, "Harvest.emf", sep = ''), width = 8.5, height = 6.5, family = "serif", bg = "white")
   par(mar = c(2.1, 4.1, 2.6, 0.6))
   
   Barplot1 <- barplot2(height = t(sapply(TempMix14[[geomix]], function(tempmix) {Estimates[[tempmix]][, "median"]})), 
@@ -1418,7 +1482,7 @@ dir.create("Figures/2015")
 require(devEMF)
 
 sapply(names(TempMix15), function(geomix) {
-  emf(file = paste("Figures/2015/", geomix, ".emf", sep = ''), width = 8.5, height = 6.5, family = "sans", bg = "white")
+  emf(file = paste("Figures/2015/", geomix, ".emf", sep = ''), width = 8.5, height = 6.5, family = "serif", bg = "white")
   par(mar = c(2.1, 4.1, 2.6, 0.6))
   
   Barplot1 <- barplot2(height = t(sapply(TempMix15[[geomix]], function(tempmix) {Estimates[[tempmix]][, "median"]})) * 100, 
@@ -1567,7 +1631,7 @@ ci.lwd <- 2.5
 ymax <- 1500
 
 sapply(names(TempMix15), function(geomix) {
-  emf(file = paste("Figures/2015/", geomix, "Harvest.emf", sep = ''), width = 8.5, height = 6.5, family = "sans", bg = "white")
+  emf(file = paste("Figures/2015/", geomix, "Harvest.emf", sep = ''), width = 8.5, height = 6.5, family = "serif", bg = "white")
   par(mar = c(2.1, 4.1, 2.6, 0.6))
   
   Barplot1 <- barplot2(height = t(sapply(TempMix15[[geomix]], function(tempmix) {Estimates[[tempmix]][, "median"]})), 
@@ -1859,11 +1923,12 @@ require(gplots)
 
 sapply(GeoMix, function(geomix) {
   
-  emf(file = paste("Figures/All Years/", filenames[geomix], ".emf", sep = ''), width = 6, height = 5.75, family = "sans", bg = "white")
+  emf(file = paste("Figures/All Years/", filenames[geomix], ".emf", sep = ''), width = 6, height = 5.75, family = "serif", bg = "white")
   
   
   layout(mat = layoutmat, widths = c(0.075, 1, 1), heights = c(0.9, 0.9, 1, 0.1))
   par(mar = rep(0, 4))
+  par(family = "times")
   
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## Y-axis label
@@ -2045,11 +2110,12 @@ require(gplots)
 
 sapply(GeoMix, function(geomix) {
   
-  emf(file = paste("Figures/All Years/", filenames[geomix], ".emf", sep = ''), width = 6, height = 5.75, family = "sans", bg = "white")
+  emf(file = paste("Figures/All Years/", filenames[geomix], ".emf", sep = ''), width = 6, height = 5.75, family = "serif", bg = "white")
   
   
   layout(mat = layoutmat, widths = c(0.075, 1, 1), heights = c(0.9, 0.9, 1, 0.1))
   par(mar = rep(0, 4))
+  par(family = "times")
   
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## Y-axis label
