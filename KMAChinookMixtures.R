@@ -909,6 +909,7 @@ cex.xaxis <- 0.5
 cex.yaxis <- 1.3
 cex.leg <- 1.1
 ci.lwd <- 2.5
+geomix = "KSPENCHIG14"
 
 
 emf(file = paste("Figures/2014/", geomix, ".emf", sep = ''), width = 6, height = 5.75, family = "serif", bg = "white")
@@ -952,7 +953,7 @@ plot.new()
 ## x-axis label
 par(mar = rep(0, 4))
 plot.new()
-text(x = 0.5, y = 0.5, labels = "Reporting Group", cex = cex.lab)
+text(x = 0.5, y = 0.25, labels = "Reporting Group", cex = cex.lab)
 
 
 dev.off()
@@ -962,9 +963,16 @@ dev.off()
 
 
 
-
-
 Estimates <- KMA2014Strata_EstimatesStats
+Groups <- groups10
+Groups2Rows <- groups10tworows
+cex.lab <- 1.5
+cex.yaxis <- 1.3
+cex.xaxis <- 0.6
+cex.main <- 1.7
+cex.leg <- 1.3
+ci.lwd <- 2.5
+
 geomix = "KSPENCHIG14"
 
 emf(file = paste("Figures/2014/", geomix, ".emf", sep = ''), width = 6, height = 5.75, family = "times", bg = "white")
