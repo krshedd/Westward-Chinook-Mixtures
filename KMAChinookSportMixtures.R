@@ -693,7 +693,7 @@ source("H:/R Source Scripts/Functions.GCL_KS.R")
 LocusControl <- dget(file = "Objects/OriginalLocusControl48.txt")
 
 KMAobjects <- list.files(path = "Objects", recursive = FALSE)
-KMAobjects <- KMAobjects[!KMAobjects %in% c("OriginalLocusControl48.txt")]
+KMAobjects <- KMAobjects[!KMAobjects %in% c("OriginalLocusControl48.txt", "OLD")]
 KMAobjects
 
 invisible(sapply(KMAobjects, function(objct) {assign(x = unlist(strsplit(x = objct, split = ".txt")), value = dget(file = paste(getwd(), "Objects", objct, sep = "/")), pos = 1) })); beep(2)
@@ -763,7 +763,7 @@ sapply("KMARS16", function(Mix) {
 
 # Quick look at raw posterior output
 str(KMARS16_Estimates$Output)
-KMARS16_Header <- setNames(object = c("Kodiak Sport May 17-August 14, 2016"), 
+KMARS16_Header <- setNames(object = c("Kodiak Sport May 22-August 13, 2016"), 
                            nm = "KMARS16")
 dput(x = KMARS16_Header, file = "Objects/KMARS16_Header.txt")
 
@@ -782,11 +782,18 @@ QuickBarplot(mixvec = "KMARS16", estimatesstats = KMARS16_EstimatesStats, groups
 ViolinPlot(estimates = KMARS16_Estimates, groups = groups10tworows, colors = colors10, header = KMARS16_Header)
 rm(KMARS16_Estimates)
 
-# Are 2015 and 2016 different?
-KMARS15vs16 <- compare_comps_between.GCL(mixnames = c("KMARS15", "KMARS16"), groupnames = groups10, mixdir = "BAYES/Output")
-str(KMARS15vs16)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Re-do Round 3 MSA files for BAYES 2016 ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Cook Inlet Gelman-Rubin is over 1.2
+table(KMARS16_Estimates$Stats$KMARS16[, "GR"] > 1.2)
 
 
+## Dumping Control files
+CreateControlFile.GCL(sillyvec = KMA211Pops, loci = loci42, mixname = "KMARS16", basename = "KMA211Pops42Loci", suffix = "", nreps = 80000, nchains = 5,
+                      groupvec = groupvec10, priorvec = KMARS16_Prior[["KMARS16"]], initmat = KMA211PopsInits, dir = "BAYES/Control",
+                      seeds = KMA211PopsChinookSeeds, thin = c(1, 1, 100), mixfortran = KMA21142MixtureFormat, basefortran = KMA211Pops42Loci.baseline, switches = "F T F T T T F")
 
 
 
