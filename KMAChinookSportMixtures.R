@@ -522,6 +522,283 @@ str(KMARS14vs15)
 
 
 
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Clean workspace; dget .gcl objects and Locus Control ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+rm(list = ls(all = TRUE))
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Sport Harvest 2014-2016/Mixtures")
+# This sources all of the new GCL functions to this workspace
+source("C:/Users/krshedd/Documents/R/Functions.GCL.R")
+source("H:/R Source Scripts/Functions.GCL_KS.R")
+
+## Get objects
+LocusControl <- dget(file = "Objects/OriginalLocusControl48.txt")
+
+KMAobjects <- list.files(path = "Objects", recursive = FALSE)
+KMAobjects <- KMAobjects[!KMAobjects %in% c("OriginalLocusControl48.txt")]
+KMAobjects
+
+invisible(sapply(KMAobjects, function(objct) {assign(x = unlist(strsplit(x = objct, split = ".txt")), value = dget(file = paste(getwd(), "Objects", objct, sep = "/")), pos = 1) })); beep(2)
+
+
+## Get collection SILLYs
+KMASport <- c("KMARS14", "KMARS15", "KMARS16")
+dput(x = KMASport, file = "Objects/KMASport.txt")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Pull genotypes from LOKI 2016 ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Pull all data for each silly code and create .gcl objects for each
+LOKI2R.GCL(sillyvec = "KMARS16", username = username, password = password)
+
+rm(username, password)
+objects(pattern = "\\.gcl")
+
+## Save unaltered .gcl's as back-up:
+invisible(sapply("KMARS16", function(silly) {dput(x = get(paste(silly, ".gcl", sep = '')), file = paste("Raw genotypes/OriginalCollections/" , silly, ".txt", sep = ''))} )); beep(8)
+
+## Original sample sizes by SILLY
+KMARS16.gcl$n
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Define strata ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# No strata, each silly is its own mixture
+
+## All fish have a capture date?
+sum(is.na(KMARS16.gcl$attributes$CAPTURE_DATE))  # Zeros are good
+
+
+## Confirm that we have other data for these fish?
+vials2016 <- as.numeric(readClipboard())
+dput(x = vials2016, file= "Objects/vials2016.txt")
+
+# Vials with data, but not genotyped
+vials2016[!vials2016 %in% KMARS16.gcl$attributes$FK_FISH_ID]
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Data QC/Massage ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+str(KMARS16.gcl)
+
+# Begin QC
+require(xlsx)
+
+KMASport16 <- "KMARS16"
+
+KMASport16_SampleSizes <- matrix(data = NA, nrow = length(KMASport16), ncol = 4, 
+                               dimnames = list(KMASport16, c("Genotyped", "Missing", "Duplicate", "Final")))
+
+#### Check loci
+## Get sample size by locus
+Original_KMASport16_SampleSizebyLocus <- SampSizeByLocus.GCL(sillyvec = KMASport16, loci = loci48)
+min(Original_KMASport16_SampleSizebyLocus)  ## 427
+apply(Original_KMASport16_SampleSizebyLocus, 1, min) / apply(Original_KMASport16_SampleSizebyLocus, 1, max)  # Good, all > 0.9
+
+Original_KMASport16_PercentbyLocus <- apply(Original_KMASport16_SampleSizebyLocus, 1, function(row) {row / max(row)} )
+which(apply(Original_KMASport16_PercentbyLocus, 2, min) < 0.8)  # no re-runs!
+
+require(lattice)
+new.colors <- colorRampPalette(c("black", "white"))
+levelplot(t(Original_KMASport16_PercentbyLocus), 
+          col.regions = new.colors, 
+          at = seq(from = 0, to = 1, length.out = 100), 
+          main = "% Genotyped", xlab = "SILLY", ylab = "Locus", 
+          scales = list(x = list(rot = 90)), 
+          aspect = "fill")  # aspect = "iso" will make squares
+
+
+#### Check individuals
+## View Histogram of Failure Rate by Strata
+invisible(sapply(KMASport16, function(mix) {
+  my.gcl <- get(paste(mix, ".gcl", sep = ''))
+  failure <- apply(my.gcl$scores[, , 1], 1, function(ind) {sum(ind == "0") / length(ind)} )
+  hist(x = failure, main = mix, xlab = "Failure Rate", col = 8, xlim = c(0, 1), ylim = c(0, 20), breaks = seq(from = 0, to = 1, by = 0.02))
+  abline(v = 0.2, lwd = 3)
+}))
+
+
+### Initial
+## Get number of individuals per silly before removing missing loci individuals
+Original_KMASport16_ColSize <- sapply(paste(KMASport16, ".gcl", sep = ''), function(x) get(x)$n)
+KMASport16_SampleSizes[, "Genotyped"] <- Original_KMASport16_ColSize
+
+
+### Missing
+## Remove individuals with >20% missing data
+KMASport16_MissLoci <- RemoveIndMissLoci.GCL(sillyvec = KMASport16, proportion = 0.8)
+
+## Get number of individuals per silly after removing missing loci individuals
+ColSize_KMASport16_PostMissLoci <- sapply(paste(KMASport16, ".gcl", sep = ''), function(x) get(x)$n)
+KMASport16_SampleSizes[, "Missing"] <- Original_KMASport16_ColSize-ColSize_KMASport16_PostMissLoci
+
+
+### Duplicate
+## Check within collections for duplicate individuals.
+KMASport16_DuplicateCheck95MinProportion <- CheckDupWithinSilly.GCL(sillyvec = KMASport16, loci = loci48, quantile = NULL, minproportion = 0.95)
+KMASport16_DuplicateCheckReportSummary <- sapply(KMASport16, function(x) KMASport16_DuplicateCheck95MinProportion[[x]]$report)
+KMASport16_DuplicateCheckReportSummary
+
+## Remove duplicate individuals
+KMASport16_RemovedDups <- RemoveDups.GCL(KMASport16_DuplicateCheck95MinProportion)
+
+## Get number of individuals per silly after removing duplicate individuals
+ColSize_KMASport16_PostDuplicate <- sapply(paste(KMASport16, ".gcl", sep = ''), function(x) get(x)$n)
+KMASport16_SampleSizes[, "Duplicate"] <- ColSize_KMASport16_PostMissLoci-ColSize_KMASport16_PostDuplicate
+
+
+### Final
+KMASport16_SampleSizes[, "Final"] <- ColSize_KMASport16_PostDuplicate
+KMASport16_SampleSizes
+
+
+write.xlsx(KMASport16_SampleSizes, file = "Output/KMASport16_SampleSizes.xlsx")
+dput(x = KMASport16_SampleSizes, file = "Objects/KMASport16_SampleSizes.txt")
+
+
+# Create final QC matrix with all three years
+KMASport_SampleSizes <- rbind(KMASport_SampleSizes, KMASport16_SampleSizes)
+write.xlsx(KMASport_SampleSizes, file = "Output/KMASport_SampleSizes.xlsx")
+dput(x = KMASport_SampleSizes, file = "Objects/KMASport_SampleSizes.txt")
+
+
+# dput postQC mixture sillys
+invisible(sapply(KMASport16, function(silly) {dput(x = get(paste(silly, ".gcl", sep = '')), file = paste("Raw genotypes/OriginalCollections_PostQC/" , silly, ".txt", sep = ''))} )); beep(8)
+
+
+## Add dates
+writeClipboard(as.character(KMARS16.gcl$attributes$FK_FISH_ID))
+KMARS16.gcl$attributes$CAPTURE_DATE <- as.Date(as.numeric(readClipboard()), origin = "1899-12-30")
+str(KMARS16.gcl)
+
+# dput postQC mixture sillys
+invisible(sapply(KMASport16, function(silly) {dput(x = get(paste(silly, ".gcl", sep = '')), file = paste("Raw genotypes/OriginalCollections_PostQC_Dates/" , silly, ".txt", sep = ''))} )); beep(8)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Clean workspace; dget .gcl objects and Locus Control ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+rm(list = ls(all = TRUE))
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Sport Harvest 2014-2016/Mixtures")
+# This sources all of the new GCL functions to this workspace
+source("C:/Users/krshedd/Documents/R/Functions.GCL.R")
+source("H:/R Source Scripts/Functions.GCL_KS.R")
+
+## Get objects
+LocusControl <- dget(file = "Objects/OriginalLocusControl48.txt")
+
+KMAobjects <- list.files(path = "Objects", recursive = FALSE)
+KMAobjects <- KMAobjects[!KMAobjects %in% c("OriginalLocusControl48.txt")]
+KMAobjects
+
+invisible(sapply(KMAobjects, function(objct) {assign(x = unlist(strsplit(x = objct, split = ".txt")), value = dget(file = paste(getwd(), "Objects", objct, sep = "/")), pos = 1) })); beep(2)
+
+
+## Get un-altered mixtures
+invisible(sapply(KMASport, function(silly) {assign(x = paste(silly, ".gcl", sep = ""), value = dget(file = paste(getwd(), "/Raw genotypes/OriginalCollections_PostQC_Dates/", silly, ".txt", sep = "")), pos = 1)} )); beep(2)
+objects(pattern = "\\.gcl")
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Round 3 MSA files for BAYES 2016 ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Create rolling prior based on 2015 Round 1 estimates
+KMARS15_EstimatesStats <- dget(file = "Estimates objects/KMARS15_EstimatesStats.txt")
+
+KMARS16_Prior <- sapply(KMARS15_EstimatesStats, function(Mix) {
+  Prior.GCL(groupvec = groupvec10, groupweights = Mix[, "mean"], minval = 0.01)}, simplify = FALSE)
+names(KMARS16_Prior) <- gsub(pattern = "S15", replacement = "S16", x = names(KMARS16_Prior))  # This changes the names
+dput(x = KMARS16_Prior, file = "Objects/KMARS16_Prior.txt")
+str(KMARS16_Prior)
+
+# Verify
+plot(as.vector(KMARS16_Prior[["KMARS16"]]), type = "h", main = "KMARS16")
+
+## Dumping Mixture files
+CreateMixture.GCL(sillys = "KMARS16", loci = loci42, IDs = NULL, mixname = "KMARS16", dir = "BAYES/Mixture", type = "BAYES", PT = FALSE)
+
+## Dumping Control files
+CreateControlFile.GCL(sillyvec = KMA211Pops, loci = loci42, mixname = "KMARS16", basename = "KMA211Pops42Loci", suffix = "", nreps = 40000, nchains = 5,
+                      groupvec = groupvec10, priorvec = KMARS16_Prior[["KMARS16"]], initmat = KMA211PopsInits, dir = "BAYES/Control",
+                      seeds = KMA211PopsChinookSeeds, thin = c(1, 1, 100), mixfortran = KMA21142MixtureFormat, basefortran = KMA211Pops42Loci.baseline, switches = "F T F T T T F")
+
+
+## Create output directory
+dir.create("BAYES/Output/KMARS16")
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Go run BAYES
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Summarize Round 3 Output ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+KMARS16_Estimates <- CustomCombineBAYESOutput.GCL(groupvec = seq(groups10), groupnames = groups10, 
+                                                  maindir = "BAYES/Output", mixvec = "KMARS16", prior = "",  
+                                                  ext = "RGN", nchains = 5, burn = 0.5, alpha = 0.1, PosteriorOutput = TRUE)
+
+# Dput 1) estimates stats + posterior output & 2) estimates stats
+dput(KMARS16_Estimates, file = "Estimates objects/KMARS16_Estimates.txt")
+dput(KMARS16_Estimates$Stats, file = "Estimates objects/KMARS16_EstimatesStats.txt")
+
+KMARS16_Estimates <- dget(file = "Estimates objects/KMARS16_Estimates.txt")
+KMARS16_EstimatesStats <- dget(file = "Estimates objects/KMARS16_EstimatesStats.txt")
+
+
+# Verify that Gelman-Rubin < 1.2
+KMARS16_Estimates$Stats$KMARS16[, "GR"]
+table(KMARS16_Estimates$Stats$KMARS16[, "GR"] > 1.2)
+sapply("KMARS16", function(Mix) {
+  BarPlot <- barplot2(KMARS16_EstimatesStats[[Mix]][, "GR"], col = "blue", ylim = c(1, pmax(1.5, max(KMARS16_EstimatesStats[[Mix]][, "GR"]))), ylab = "Gelman-Rubin", type = "h", xpd = FALSE, main = Mix, names.arg = '')
+  abline(h = 1.2, lwd = 3, xpd = FALSE)
+  text(x = BarPlot, y = 1, labels = groups10tworows, srt = 0, pos = 1, xpd = TRUE, cex = 0.55)
+})
+
+# Quick look at raw posterior output
+str(KMARS16_Estimates$Output)
+KMARS16_Header <- setNames(object = c("Kodiak Sport May 17-August 14, 2016"), 
+                           nm = "KMARS16")
+dput(x = KMARS16_Header, file = "Objects/KMARS16_Header.txt")
+
+PlotPosterior(mixvec = "KMARS16", output = KMARS16_Estimates$Output, 
+              groups = groups10, colors = colors10, 
+              header = KMARS16_Header, set.mfrow = c(5, 2), thin = 10)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Plot Round 3 Results ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Barplots
+KMARS16_EstimatesStats <- dget(file = "Estimates objects/KMARS16_EstimatesStats.txt")
+QuickBarplot(mixvec = "KMARS16", estimatesstats = KMARS16_EstimatesStats, groups = groups10, groups2rows = groups10tworows, header = KMARS16_Header)
+
+## Make violin plots of posteriors with RGs sorted
+ViolinPlot(estimates = KMARS16_Estimates, groups = groups10tworows, colors = colors10, header = KMARS16_Header)
+rm(KMARS16_Estimates)
+
+# Are 2015 and 2016 different?
+KMARS15vs16 <- compare_comps_between.GCL(mixnames = c("KMARS15", "KMARS16"), groupnames = groups10, mixdir = "BAYES/Output")
+str(KMARS15vs16)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### Plot Percentages for KMA Mixtures ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -536,98 +813,6 @@ layoutmat <- matrix(data=c(  1, 2,
                              1, 3,
                              1, 4,
                              5, 6), nrow = 4, ncol = 2, byrow = TRUE)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-GeoMix <- c("KALITC", "KEASTC", "KWESTC", "KMAINC")
-
-filenames <- setNames(object = c("SW Kodiak Alitak Proportions 2014-2016", 
-                                 "Eastside Proportions 2014-2016",
-                                 "Westside Proportions 2014-2016",
-                                 "Mainland Proportions 2014-2016"), nm = GeoMix)
-
-# If showing proportions (percetages) use blue, otherwise green as "low"
-ProportionColors <- colorpanel(n = 2, low = "blue", high = "white")
-
-
-#~~~~~~~~~~~~~~~~~~
-# 2014
-TempMix14 <- sapply(KMA2014, function(geo) {grep(pattern = geo, x = names(KMA2014Strata_EstimatesStats), value = TRUE)}, simplify = FALSE)
-
-Legend14 <- setNames(object = c("June 1-July 5", "July 6-August 5"), 
-                     nm = c("1_Early", "2_Late"))
-TempLegend14 <- sapply(KMA2014, function(geo) {
-  Legend14[sapply(TempMix14[[geo]], function(strata) {unlist(strsplit(x = strata, split = paste(geo, "_", sep = '')))[2]} )]
-}, simplify = FALSE)
-
-
-TempProportionColors14 <- sapply(KMA2014, function(geo) {
-  ProportionColors[sapply(TempMix14[[geo]], function(strata) {as.numeric(unlist(strsplit(x = strata, split = "_"))[2])} )]
-}, simplify = FALSE)
-
-Estimates14 <- KMA2014Strata_EstimatesStats
-
-#~~~~~~~~~~~~~~~~~~
-# 2015
-TempMix15 <- sapply(KMA2015, function(geo) {grep(pattern = geo, x = names(KMA2015Strata_EstimatesStats), value = TRUE)}, simplify = FALSE)
-
-Legend15 <- setNames(object = c("June 1-July 5", "July 6-August 5"), 
-                     nm = c("1_Early", "2_Late"))
-TempLegend15 <- sapply(KMA2015, function(geo) {
-  Legend15[sapply(TempMix15[[geo]], function(strata) {unlist(strsplit(x = strata, split = paste(geo, "_", sep = '')))[2]} )]
-}, simplify = FALSE)
-
-
-TempProportionColors15 <- sapply(KMA2015, function(geo) {
-  ProportionColors[sapply(TempMix15[[geo]], function(strata) {as.numeric(unlist(strsplit(x = strata, split = "_"))[2])} )]
-}, simplify = FALSE)
-
-Estimates15 <- KMA2015Strata_EstimatesStats
-
-#~~~~~~~~~~~~~~~~~~
-# 2016
-# TempMix16 <- sapply(KMA2016, function(geo) {grep(pattern = geo, x = names(KMA2016Strata_EstimatesStats), value = TRUE)}, simplify = FALSE)
-# 
-# Legend16 <- setNames(object = c("June 1-27", "June 28-July 25", "July 26-August 29"), 
-#                      nm = c("1_Early", "2_Middle", "3_Late"))
-# TempLegend16 <- sapply(KMA2016, function(geo) {
-#   Legend16[sapply(TempMix16[[geo]], function(strata) {unlist(strsplit(x = strata, split = paste(geo, "_", sep = '')))[2]} )]
-# }, simplify = FALSE)
-# 
-# 
-# TempProportionColors16 <- sapply(KMA2016, function(geo) {
-#   ProportionColors[sapply(TempMix16[[geo]], function(strata) {as.numeric(unlist(strsplit(x = strata, split = "_"))[2])} )]
-# }, simplify = FALSE)
-# 
-# Estimates16 <- KMA2016Strata_EstimatesStats
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #~~~~~~~~~~~~~~~~~~
 # Size Parameters
@@ -648,7 +833,7 @@ require(devEMF)
 require(gplots)
 
 
-emf(file = paste("Figures/KMA Sport Proportions 2014-2016.emf", sep = ''), width = 6, height = 5.75, family = "sans", bg = "white")
+emf(file = paste("Figures/KMA Sport Proportions 2014-2016.emf", sep = ''), width = 6, height = 5.75, family = "serif", bg = "white")
 
 
 layout(mat = layoutmat, widths = c(0.075, 1, 1), heights = c(0.9, 0.9, 1, 0.1))
@@ -657,6 +842,7 @@ par(mar = rep(0, 4))
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Y-axis label
 plot.new()
+par(family = "times")
 text(x = 0.25, y = 0.5, labels = "Percentage of Catch", srt = 90, cex = cex.lab)
 
 
@@ -726,7 +912,6 @@ text(x = 0.5, y = 0.5, labels = "Reporting Group", cex = cex.lab)
 
 
 dev.off()
-
 
 
 
