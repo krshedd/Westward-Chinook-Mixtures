@@ -3094,13 +3094,14 @@ require(gplots)
 emf(file = paste("Figures/Final/", filenames, ".emf", sep = ''), width = 6, height = 5.75, family = "serif", bg = "white")
 
 
-layout(mat = layoutmat, widths = c(0.075, 1, 1), heights = c(1.35, 1.35, 0.15))
+layout(mat = layoutmat, widths = c(0.075, 1), heights = c(1.35, 1.35, 0.15))
 par(mar = rep(0, 4))
 par(family = "times")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Y-axis label
 plot.new()
+par(mar = rep(0, 4))
 text(x = 0.25, y = 0.5, labels = "Percentage of Catch", srt = 90, cex = cex.lab)
 
 
@@ -3119,6 +3120,7 @@ abline(h = 0, xpd = FALSE)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Y-axis label
+par(mar = rep(0, 4))
 plot.new()
 text(x = 0.25, y = 0.5, labels = "Number of Fish Harvested", srt = 90, cex = cex.lab)
 
@@ -3150,6 +3152,144 @@ plot.new()
 text(x = 0.5, y = 0.25, labels = "Reporting Group", cex = cex.lab)
 
 dev.off()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+KMA2014Strata_EstimatesStats <- dget(file = "Estimates objects/Final/KMA2014Strata_EstimatesStats.txt")
+
+SPENCHIG14_EstimatesStats <- KMA2014Strata_EstimatesStats[["KSPENCHIG14"]]
+SPENCHIG14_HarvestEstimatesStats <- cbind(KMA2014Strata_EstimatesStats[["KSPENCHIG14"]][, c("mean", "sd", "median", "5%", "95%")] * 12209,
+                                          KMA2014Strata_EstimatesStats[["KSPENCHIG14"]][, c("P=0", "GR")])
+
+TempLegend <- "June 1-August 5"
+
+# Three barplot layout
+layoutmat <- matrix(data=c(  1, 2, 3,
+                             4, 5, 6), nrow = 2, ncol = 3, byrow = TRUE)
+
+
+
+GeoMix <- c("KSPENCHIG14")
+
+filenames <- setNames(object = c("South Pen Chignik Proportions Harvest 2014 OnePlot"), nm = GeoMix)
+
+# If showing proportions (percetages) use blue, otherwise green as "low"
+
+#~~~~~~~~~~~~~~~~~~
+# Size Parameters
+Groups <- groups10
+Groups2Rows <- groups10tworows
+cex.lab <- 1.5
+cex.xaxis <- 0.5
+cex.yaxis <- 1.3
+cex.leg <- 1.1
+ci.lwd <- 2.5
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Make figures as .emf files
+
+# dir.create("Figures/All Years")
+require(devEMF)
+require(gplots)
+
+
+emf(file = paste("Figures/Final/", filenames, ".emf", sep = ''), width = 6, height = 5.75, family = "serif", bg = "white")
+
+
+layout(mat = layoutmat, widths = c(0.075, 1, 0.075), heights = c(2.7, 0.15))
+par(mar = rep(0, 4))
+par(family = "times")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Left Y-axis label
+par(mar = rep(0, 4))
+plot.new()
+text(x = 0.25, y = 0.5, labels = "Percentage of Catch", srt = 90, cex = cex.lab)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Proportions Barplot
+par(mar = c(1, 1, 1.5, 1))
+BarplotProp <- barplot2(height = SPENCHIG14_EstimatesStats[,"median"] * 100, 
+                        beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                        ci.l = SPENCHIG14_EstimatesStats[,"5%"] * 100, 
+                        ci.u = SPENCHIG14_EstimatesStats[,"95%"] * 100, 
+                        ylim = c(0, 100), col = "white", yaxt = "n", xaxt = 'n')
+axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+legend(legend = TempLegend, x = "topleft", fill = "white", border = "black", bty = "n", cex = cex.leg, title="2014")
+abline(h = 0, xpd = FALSE)
+axis(side = 4, at = c(0, 3000, 6000, 9000, 12000) / 12209 * 100, labels = formatC(x = c(0, 3000, 6000, 9000, 12000), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+
+mtext(text = Groups2Rows, side = 1, line = 1, at = BarplotHarvest, adj = 0.5, cex = cex.xaxis)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Y-axis label
+par(mar = rep(0, 4))
+plot.new()
+text(x = 0.4, y = 0.5, labels = "Number of Fish Harvested", srt = 90, cex = cex.lab, adj = c(0.5, 1))
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Blank Corner
+par(mar = rep(0, 4))
+plot.new()
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## x-axis label
+par(mar = rep(0, 4))
+plot.new()
+text(x = 0.5, y = 0.25, labels = "Reporting Group", cex = cex.lab)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Blank Corner
+par(mar = rep(0, 4))
+plot.new()
+
+dev.off()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
