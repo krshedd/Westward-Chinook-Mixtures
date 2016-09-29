@@ -3063,16 +3063,28 @@ dput(x = DatesStrata2015_Final, file = "Objects/DatesStrata2015_Final.txt")
 DatesStrata2015_Final <- dget(file = "Objects/DatesStrata2015_Final.txt")
 
 
+DatesStrata2016_Final <- matrix(data = c(rep("June 1-July 5", 4), rep("July 6-August 5", 4)), 
+                                nrow = 4, ncol = 2, byrow = FALSE, dimnames = list(KMA2016, c("1_Early", "2_Late")))
+dput(x = DatesStrata2016_Final, file = "Objects/DatesStrata2016_Final.txt")
+DatesStrata2016_Final <- dget(file = "Objects/DatesStrata2016_Final.txt")
+
+
 ## Sample sizes
-KMA2014_2015Strata_SampleSizes_Final <- KMA2014_2015Strata_SampleSizes[, "Final"]
-dput(x = KMA2014_2015Strata_SampleSizes_Final, file = "Objects/KMA2014_2015Strata_SampleSizes_Final.txt")
-KMA2014_2015Strata_SampleSizes_Final <- dget(file = "Objects/KMA2014_2015Strata_SampleSizes_Final.txt")
+# KMA2014_2015Strata_SampleSizes_Final <- KMA2014_2015Strata_SampleSizes[, "Final"]
+# dput(x = KMA2014_2015Strata_SampleSizes_Final, file = "Objects/KMA2014_2015Strata_SampleSizes_Final.txt")
+# KMA2014_2015Strata_SampleSizes_Final <- dget(file = "Objects/KMA2014_2015Strata_SampleSizes_Final.txt")
+
+
+KMA2014_2016Strata_SampleSizes_Final <- KMA2014_2016Strata_SampleSizes[, "Final"]
+dput(x = KMA2014_2016Strata_SampleSizes_Final, file = "Objects/KMA2014_2016Strata_SampleSizes_Final.txt")
+KMA2014_2016Strata_SampleSizes_Final <- dget(file = "Objects/KMA2014_2016Strata_SampleSizes_Final.txt")
+
 
 
 ## Geographic headers
-GeoHeader <- setNames(object = c(paste0("SW Kodiak/Alitak (District 255, 256, 257)"),
+GeoHeader <- setNames(object = c(paste0("Southwest Kodiak/Alitak (District 255, 256, 257)"),
                                  paste0("Eastside Kodiak/Afognak (District 252, 258, 259)"),
-                                 paste0("Westside Kodiak/Afognak (District 251, 253, 254)"),
+                                 paste0("Northwest Kodiak/Afognak (District 251, 253, 254)"),
                                  paste0("Mainland (District 262)")),
                       nm = unlist(strsplit(x = KMA2015, split = "15")))
 dput(x = GeoHeader, file = "Objects/GeoHeader.txt")
@@ -3090,10 +3102,20 @@ KMAfinalestimatesobjects; rm(KMAfinalestimatesobjects)
 ## Defining caption variables
 
 EstimatesStats <- c(KMA2014Strata_EstimatesStats, KMA2014_Annual_EstimatesStats,
-                    KMA2015Strata_EstimatesStats, KMA2015_Annual_EstimatesStats)
+                    KMA2015Strata_EstimatesStats, KMA2015_Annual_EstimatesStats,
+                    KMA2016Strata_EstimatesStats, KMA2016_Annual_EstimatesStats)
+
+KMA2014Strata_HarvestEstimatesStats <- c(KMA2014Strata_HarvestEstimatesStats,
+                                         list("KSPENCHIG14" = 
+                                                cbind(KMA2014Strata_EstimatesStats[["KSPENCHIG14"]][, c("mean", "sd", "median", "5%", "95%")] * 12209,
+                                                      KMA2014Strata_EstimatesStats[["KSPENCHIG14"]][, c("P=0", "GR")])))
+
 
 HarvestEstimatesStats <- c(KMA2014Strata_HarvestEstimatesStats, KMA2014_Annual_HarvestEstimatesStats,
-                           KMA2015Strata_HarvestEstimatesStats, KMA2015_Annual_HarvestEstimatesStats)
+                           KMA2015Strata_HarvestEstimatesStats, KMA2015_Annual_HarvestEstimatesStats,
+                           KMA2016Strata_HarvestEstimatesStats, KMA2016_Annual_HarvestEstimatesStats)
+
+
 
 SheetNames <- sort(names(EstimatesStats))
 names(SheetNames) <- SheetNames
@@ -3101,11 +3123,13 @@ mixvec <- SheetNames
 
 
 # mix <- SheetNames[2]
-harvest <- rbind(HarvestByStrata2014, HarvestByStrata2015)
-dates <- rbind(DatesStrata2014_Final, DatesStrata2015_Final)
-sampsize <- KMA2014_2015Strata_SampleSizes_Final
+harvest <- rbind(HarvestByStrata2014, HarvestByStrata2015, HarvestByStrata2016)
+dates <- rbind(DatesStrata2014_Final, DatesStrata2015_Final, DatesStrata2016_Final)
+sampsize <- KMA2014_2016Strata_SampleSizes_Final
 
 SheetNames <- SheetNames[-which(SheetNames == "KSPENCHIG14")]
+
+SheetNames <- grep(pattern = "16", x = SheetNames, value = TRUE)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # dir.create("Estimates tables")
