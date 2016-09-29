@@ -2000,6 +2000,7 @@ dput(x = KMA2016Strata_SampleSizes, file = "Objects/KMA2016Strata_SampleSizes.tx
 ### Create a final sample size matrix for 2014-2016
 KMA2014_2016Strata_SampleSizes <- rbind(KMA2014_2015Strata_SampleSizes, KMA2016Strata_SampleSizes)
 dput(x = KMA2014_2016Strata_SampleSizes, file = "Objects/KMA2014_2016Strata_SampleSizes.txt")
+write.xlsx(KMA2014_2016Strata_SampleSizes, file = "Output/KMA2014_2016Strata_SampleSizes.xlsx")
 
 
 
