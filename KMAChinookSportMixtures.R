@@ -797,12 +797,53 @@ CreateControlFile.GCL(sillyvec = KMA211Pops, loci = loci42, mixname = "KMARS16",
 
 
 
+KMARS16_80K_Estimates <- CustomCombineBAYESOutput.GCL(groupvec = seq(groups10), groupnames = groups10, 
+                                                  maindir = "BAYES/Output/80K/", mixvec = "KMARS16", prior = "",  
+                                                  ext = "RGN", nchains = 5, burn = 0.5, alpha = 0.1, PosteriorOutput = TRUE)
+
+# Dput 1) estimates stats + posterior output & 2) estimates stats
+dput(KMARS16_80K_Estimates, file = "Estimates objects/KMARS16_80K_Estimates.txt")
+dput(KMARS16_80K_Estimates$Stats, file = "Estimates objects/KMARS16_80K_EstimatesStats.txt")
+
+KMARS16_80K_Estimates <- dget(file = "Estimates objects/KMARS16_80K_Estimates.txt")
+KMARS16_80K_EstimatesStats <- dget(file = "Estimates objects/KMARS16_80K_EstimatesStats.txt")
+
+
+# Verify that Gelman-Rubin < 1.2
+KMARS16_80K_Estimates$Stats$KMARS16[, "GR"]
+table(KMARS16_80K_Estimates$Stats$KMARS16[, "GR"] > 1.2)
+sapply("KMARS16", function(Mix) {
+  BarPlot <- barplot2(KMARS16_80K_EstimatesStats[[Mix]][, "GR"], col = "blue", ylim = c(1, pmax(1.5, max(KMARS16_80K_EstimatesStats[[Mix]][, "GR"]))), ylab = "Gelman-Rubin", type = "h", xpd = FALSE, main = Mix, names.arg = '')
+  abline(h = 1.2, lwd = 3, xpd = FALSE)
+  text(x = BarPlot, y = 1, labels = groups10tworows, srt = 0, pos = 1, xpd = TRUE, cex = 0.55)
+})
+
+# Quick look at raw posterior output
+str(KMARS16_80K_Estimates$Output)
+KMARS16_Header <- setNames(object = c("Kodiak Sport May 22-August 13, 2016"), 
+                           nm = "KMARS16")
+dput(x = KMARS16_Header, file = "Objects/KMARS16_Header.txt")
+
+PlotPosterior(mixvec = "KMARS16", output = KMARS16_80K_Estimates$Output, 
+              groups = groups10, colors = colors10, 
+              header = KMARS16_Header, set.mfrow = c(5, 2), thin = 10)
 
 
 
 
+# Plot Annual vs. Early Means
+KMARS16_EstimatesStats <- dget(file = "Estimates objects/KMARS16_EstimatesStats.txt")
 
-
+par(mar = c(4.1, 5.1, 3.1, 1.1))
+Barplot <- barplot2(height = rbind(KMARS16_EstimatesStats[[1]][, "median"], KMARS16_80K_EstimatesStats[[1]][, "median"]) * 100, plot.ci = TRUE,
+                    ci.l = rbind(KMARS16_EstimatesStats[[1]][, "5%"], KMARS16_80K_EstimatesStats[[1]][, "5%"]) * 100,
+                    ci.u = rbind(KMARS16_EstimatesStats[[1]][, "95%"], KMARS16_80K_EstimatesStats[[1]][, "95%"]) * 100,
+                    beside = TRUE, col = c("blue", "white"), yaxt = 'n', xaxt = 'n', main = "KMARS16", ylab = "Precent of Mixture",
+                    cex.lab = 2, cex.main = 2, ylim = c(0, 100))
+axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = ",", digits = 0, format = "f"), cex.axis = 1.5)
+abline(h = 0, xpd = FALSE)
+text(x = colMeans(Barplot), y = -1, labels = groups10tworows, srt = 90, adj = 1, xpd = TRUE, cex = 0.6)
+legend("topleft", legend = c("40K", "80K"), fill = c("blue", "white"), bty = 'n', cex = 1.5)
 
 
 
