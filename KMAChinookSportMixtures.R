@@ -853,6 +853,7 @@ legend("topleft", legend = c("40K", "80K"), fill = c("blue", "white"), bty = 'n'
 
 KMARS14_EstimatesStats <- dget(file = "Estimates objects/KMARS14_EstimatesStats.txt")
 KMARS15_EstimatesStats <- dget(file = "Estimates objects/KMARS15_EstimatesStats.txt")
+KMARS16_EstimatesStats <- dget(file = "Estimates objects/KMARS16_80K_EstimatesStats.txt")
 
 str(KMARS14_EstimatesStats)
 
@@ -884,7 +885,7 @@ require(gplots)
 emf(file = paste("Figures/KMA Sport Proportions 2014-2016.emf", sep = ''), width = 6, height = 5.75, family = "serif", bg = "white")
 
 
-layout(mat = layoutmat, widths = c(0.075, 1, 1), heights = c(0.9, 0.9, 1, 0.1))
+layout(mat = layoutmat, widths = c(0.075, 1, 1), heights = c(0.9, 0.9, 0.9, 0.15))
 par(mar = rep(0, 4))
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -911,7 +912,7 @@ abline(h = 0, xpd = FALSE)
 ## 2015 Barplot
 tempmix <- "KMARS15"
 par(mar = c(1, 1, 1, 1))
-Barplot14 <- barplot2(height = KMARS15_EstimatesStats[[tempmix]][, "median"] * 100, 
+Barplot15 <- barplot2(height = KMARS15_EstimatesStats[[tempmix]][, "median"] * 100, 
                       beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
                       ci.l = KMARS15_EstimatesStats[[tempmix]][, "5%"] * 100, 
                       ci.u = KMARS15_EstimatesStats[[tempmix]][, "95%"] * 100, 
@@ -922,29 +923,17 @@ abline(h = 0, xpd = FALSE)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## 2016 Barplot
-
-par(mar = c(2, 1, 1, 1))
-Barplot16 <- barplot2(height = rep(0, length(Groups)),
+tempmix <- "KMARS16"
+par(mar = c(1, 1, 1, 1))
+Barplot16 <- barplot2(height = KMARS16_EstimatesStats[[tempmix]][, "median"] * 100, 
                       beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
-                      ci.l = rep(0, length(Groups)),
-                      ci.u = rep(0, length(Groups)),
-                      ylim = c(0, 100), col = "black", yaxt = "n", xaxt = 'n')
+                      ci.l = KMARS16_EstimatesStats[[tempmix]][, "5%"] * 100, 
+                      ci.u = KMARS16_EstimatesStats[[tempmix]][, "95%"] * 100, 
+                      ylim = c(0, 100), col = "blue", yaxt = "n", xaxt = 'n')
 axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
-legend(legend = "May 17-August 13", x = "topleft", fill = "blue", border = "black", bty = "n", cex = cex.leg, title="2016")
+legend(legend = "May 22-August 13", x = "topleft", fill = "blue", border = "black", bty = "n", cex = cex.leg, title="2016")
 abline(h = 0, xpd = FALSE)
 
-# tempmix <- "KMARS16"
-# par(mar = c(1, 1, 1, 1))
-# Barplot14 <- barplot2(height = KMARS16_EstimatesStats[[tempmix]][, "median"] * 100, 
-#                       beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
-#                       ci.l = KMARS16_EstimatesStats[[tempmix]][, "5%"] * 100, 
-#                       ci.u = KMARS16_EstimatesStats[[tempmix]][, "95%"] * 100, 
-#                       ylim = c(0, 100), col = "blue", yaxt = "n", xaxt = 'n')
-# axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
-# legend(legend = "May 17-August 14", x = "topleft", fill = "blue", border = "black", bty = "n", cex = cex.leg, title="2016")
-# abline(h = 0, xpd = FALSE)
-
-# 
 mtext(text = Groups2Rows, side = 1, line = 1, at = Barplot16, adj = 0.5, cex = cex.xaxis)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -956,7 +945,7 @@ plot.new()
 ## x-axis label
 par(mar = rep(0, 4))
 plot.new()
-text(x = 0.5, y = 0.5, labels = "Reporting Group", cex = cex.lab)
+text(x = 0.5, y = 0.25, labels = "Reporting Group", cex = cex.lab)
 
 
 dev.off()
@@ -971,7 +960,7 @@ require(xlsx)
 
 
 # 2014
-Caption <- paste0("Table X.-Annual estimates of stock composition (%) for the Kodiak Area Sport Fishery, 2014. Estimates include median, 90% credibility interval (CI), the probability that the group estimate is equal to zero (P=0), mean, and SD.")
+Caption <- paste0("Table X.-Annual estimates of stock composition (%) for the Kodiak Area Sport Fishery, April 16-August 29, 2014. Estimates include median, 90% credibility interval (CI), the probability that the group estimate is equal to zero (P=0), mean, and SD.")
 
 Disclaimer <- "Note: Stock composition estimates may not sum to 100% due to rounding error."
 
@@ -995,7 +984,7 @@ write.xlsx(x = as.data.frame(TableX),
 
 
 # 2015
-Caption <- paste0("Table X.-Annual estimates of stock composition (%) for the Kodiak Area Sport Fishery, 2015. Estimates include median, 90% credibility interval (CI), the probability that the group estimate is equal to zero (P=0), mean, and SD.")
+Caption <- paste0("Table X.-Annual estimates of stock composition (%) for the Kodiak Area Sport Fishery, May 17-August 14, 2015. Estimates include median, 90% credibility interval (CI), the probability that the group estimate is equal to zero (P=0), mean, and SD.")
 
 Disclaimer <- "Note: Stock composition estimates may not sum to 100% due to rounding error."
 
@@ -1019,7 +1008,7 @@ write.xlsx(x = as.data.frame(TableX),
 
 
 # 2016
-Caption <- paste0("Table X.-Annual estimates of stock composition (%) for the Kodiak Area Sport Fishery, 2016. Estimates include median, 90% credibility interval (CI), the probability that the group estimate is equal to zero (P=0), mean, and SD.")
+Caption <- paste0("Table X.-Annual estimates of stock composition (%) for the Kodiak Area Sport Fishery, May 22-August 13, 2016. Estimates include median, 90% credibility interval (CI), the probability that the group estimate is equal to zero (P=0), mean, and SD.")
 
 Disclaimer <- "Note: Stock composition estimates may not sum to 100% due to rounding error."
 
