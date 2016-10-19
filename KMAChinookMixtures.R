@@ -3543,3 +3543,304 @@ hist(KSPENCHIG14.gcl$attributes$Size[KSPENCHIG14.gcl$attributes$maxIA == "CWAK /
 hist(KSPENCHIG14.gcl$attributes$Size[KSPENCHIG14.gcl$attributes$maxIA == "CWAK / Yukon" & KSPENCHIG14.gcl$attributes$CAPTURE_LOCATION %in% c("SE/South Central", "Unimak/Southwestern") & KSPENCHIG14.gcl$attributes$MESH_SIZE_COMMENT == "Late"], breaks = seq(300, 1000, 20), col = 4, add = TRUE)
 legend("topleft", legend = c("All MSA Samples", "CWAK / Yukon Early", "CWAK / Yukon Late"), fill = c(8, 2, 4), bty = "n")
 
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Stratified Annual Rollups Across Spatio-Temporal Strata ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+HarvestByStrata2014
+HarvestByStrata2015
+HarvestByStrata2016
+
+KMA2014
+KMA2014Strata
+
+#~~~~~~~~~~~~~~~~~~
+# For this to work properly, the output mixture directories all need to be in the same place (can be moved back afterwards)
+# 2014
+KMA2014_Annual_Stratified <- StratifiedEstimator.GCL(
+  groupvec = seq(groups10), groupnames = groups10, maindir = "BAYES/Output", 
+  mixvec = KMA2014Strata, 
+  catchvec = as.vector(na.omit(as.vector(t(HarvestByStrata2014[sort(KMA2014), ])))), 
+  newname = "KMA2014_Annual_Stratified", priorname = '',
+  ext = "RGN", nchains = 5, burn = 0.5, alpha = 0.1
+)
+str(KMA2014_Annual_Stratified)
+dput(x = KMA2014_Annual_Stratified, file = "Estimates objects/KMA2014_Annual_Stratified.txt")
+KMA2014_Annual_Stratified_EstimatesStats <- KMA2014_Annual_Stratified$Stats
+dput(x = KMA2014_Annual_Stratified_EstimatesStats, file = "Estimates objects/Final/KMA2014_Annual_Stratified_EstimatesStats.txt")
+
+#~~~~~~~~~~~~~~~~~~
+#2015
+KMA2015_Annual_Stratified <- StratifiedEstimator.GCL(
+  groupvec = seq(groups10), groupnames = groups10, maindir = "BAYES/Output", 
+  mixvec = KMA2015Strata, 
+  catchvec = as.vector(na.omit(as.vector(t(HarvestByStrata2015[sort(KMA2015), ])))), 
+  newname = "KMA2015_Annual_Stratified", priorname = '',
+  ext = "RGN", nchains = 5, burn = 0.5, alpha = 0.1
+)
+str(KMA2015_Annual_Stratified)
+dput(x = KMA2015_Annual_Stratified, file = "Estimates objects/KMA2015_Annual_Stratified.txt")
+KMA2015_Annual_Stratified_EstimatesStats <- KMA2015_Annual_Stratified$Stats
+dput(x = KMA2015_Annual_Stratified_EstimatesStats, file = "Estimates objects/Final/KMA2015_Annual_Stratified_EstimatesStats.txt")
+
+#~~~~~~~~~~~~~~~~~~
+#2016
+KMA2016_Annual_Stratified <- StratifiedEstimator.GCL(
+  groupvec = seq(groups10), groupnames = groups10, maindir = "BAYES/Output", 
+  mixvec = KMA2016Strata, 
+  catchvec = as.vector(na.omit(as.vector(t(HarvestByStrata2016[sort(KMA2016), ])))), 
+  newname = "KMA2016_Annual_Stratified", priorname = '',
+  ext = "RGN", nchains = 5, burn = 0.5, alpha = 0.1
+)
+str(KMA2016_Annual_Stratified)
+dput(x = KMA2016_Annual_Stratified, file = "Estimates objects/KMA2016_Annual_Stratified.txt")
+KMA2016_Annual_Stratified_EstimatesStats <- KMA2016_Annual_Stratified$Stats
+dput(x = KMA2016_Annual_Stratified_EstimatesStats, file = "Estimates objects/Final/KMA2016_Annual_Stratified_EstimatesStats.txt")
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Harvest
+
+# Create a list object with all Stratified Annual Harvest
+KMA2014_Annual_Stratified_HarvestEstimatesStats <-
+  cbind(KMA2014_Annual_Stratified_EstimatesStats[, c("mean", "sd", "median", "5%", "95%")] * sum(HarvestByStrata2014, na.rm = TRUE),
+        KMA2014_Annual_Stratified_EstimatesStats[, c("P=0", "GR")])
+dput(x = KMA2014_Annual_Stratified_HarvestEstimatesStats, file = "Estimates objects/Final/KMA2014_Annual_Stratified_HarvestEstimatesStats.txt")
+str(KMA2014_Annual_Stratified_HarvestEstimatesStats)
+
+KMA2015_Annual_Stratified_HarvestEstimatesStats <-
+  cbind(KMA2015_Annual_Stratified_EstimatesStats[, c("mean", "sd", "median", "5%", "95%")] * sum(HarvestByStrata2015, na.rm = TRUE),
+        KMA2015_Annual_Stratified_EstimatesStats[, c("P=0", "GR")])
+dput(x = KMA2015_Annual_Stratified_HarvestEstimatesStats, file = "Estimates objects/Final/KMA2015_Annual_Stratified_HarvestEstimatesStats.txt")
+str(KMA2015_Annual_Stratified_HarvestEstimatesStats)
+
+KMA2016_Annual_Stratified_HarvestEstimatesStats <-
+  cbind(KMA2016_Annual_Stratified_EstimatesStats[, c("mean", "sd", "median", "5%", "95%")] * sum(HarvestByStrata2016, na.rm = TRUE),
+        KMA2016_Annual_Stratified_EstimatesStats[, c("P=0", "GR")])
+dput(x = KMA2016_Annual_Stratified_HarvestEstimatesStats, file = "Estimates objects/Final/KMA2016_Annual_Stratified_HarvestEstimatesStats.txt")
+str(KMA2016_Annual_Stratified_HarvestEstimatesStats)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Plot Annual KMA Percentages ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+KMA2014_Annual_Stratified_EstimatesStats <- dget(file = "Estimates objects/Final/KMA2014_Annual_Stratified_EstimatesStats.txt")
+KMA2015_Annual_Stratified_EstimatesStats <- dget(file = "Estimates objects/Final/KMA2015_Annual_Stratified_EstimatesStats.txt")
+KMA2016_Annual_Stratified_EstimatesStats <- dget(file = "Estimates objects/Final/KMA2016_Annual_Stratified_EstimatesStats.txt")
+
+
+
+# Three barplot layout
+layoutmat <- matrix(data=c(  1, 2,
+                             3, 4), nrow = 2, ncol = 2, byrow = TRUE)
+
+ProportionColors <- colorpanel(n = 3, low = "blue", high = "white")
+
+#~~~~~~~~~~~~~~~~~~
+# Size Parameters
+Groups <- groups10
+Groups2Rows <- groups10tworows
+cex.lab <- 1.5
+cex.xaxis <- 0.5
+cex.yaxis <- 1.3
+cex.leg <- 1.1
+ci.lwd <- 2.5
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Make figures as .emf files
+
+# dir.create("Figures/All Years")
+require(devEMF)
+require(gplots)
+
+
+
+emf(file = "Figures/All Years/KMA Proportions 2014-2016.emf", width = 6, height = 5.75, family = "serif", bg = "white")
+
+
+layout(mat = layoutmat, widths = c(0.075, 1), heights = c(2.7, 0.15))
+par(mar = rep(0, 4))
+par(family = "times")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Y-axis label
+plot.new()
+text(x = 0.25, y = 0.5, labels = "Percentage of KMA Harvest", srt = 90, cex = cex.lab)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Barplot
+par(mar = c(1, 1, 1.5, 1))
+Barplot <- barplot2(height = t(cbind(KMA2014_Annual_Stratified_EstimatesStats[, "median"],
+                                   KMA2015_Annual_Stratified_EstimatesStats[, "median"],
+                                   KMA2016_Annual_Stratified_EstimatesStats[, "median"])) * 100, 
+                    beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                    ci.l = t(cbind(KMA2014_Annual_Stratified_EstimatesStats[, "5%"],
+                                 KMA2015_Annual_Stratified_EstimatesStats[, "5%"],
+                                 KMA2016_Annual_Stratified_EstimatesStats[, "5%"])) * 100, 
+                    ci.u = t(cbind(KMA2014_Annual_Stratified_EstimatesStats[, "95%"],
+                                 KMA2015_Annual_Stratified_EstimatesStats[, "95%"],
+                                 KMA2016_Annual_Stratified_EstimatesStats[, "95%"])) * 100, 
+                    ylim = c(0, 100), col = ProportionColors, yaxt = "n", xaxt = 'n')
+axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+legend(legend = 2014:2016, x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="")
+abline(h = 0, xpd = FALSE)
+
+mtext(text = Groups2Rows, side = 1, line = 0.66, at = apply(Barplot, 2, mean), adj = 0.5, cex = cex.xaxis)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Blank Corner
+par(mar = rep(0, 4))
+plot.new()
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## x-axis label
+par(mar = rep(0, 4))
+plot.new()
+text(x = 0.5, y = 0.25, labels = "Reporting Group", cex = cex.lab)
+
+
+dev.off()
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Plot Annual KMA Harvest ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+KMA2014_Annual_Stratified_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2014_Annual_Stratified_HarvestEstimatesStats.txt")
+KMA2015_Annual_Stratified_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2015_Annual_Stratified_HarvestEstimatesStats.txt")
+KMA2016_Annual_Stratified_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2016_Annual_Stratified_HarvestEstimatesStats.txt")
+
+
+
+# Three barplot layout
+layoutmat <- matrix(data=c(  1, 2,
+                             3, 4), nrow = 2, ncol = 2, byrow = TRUE)
+
+ProportionColors <- colorpanel(n = 3, low = "green", high = "white")
+
+#~~~~~~~~~~~~~~~~~~
+# Size Parameters
+Groups <- groups10
+Groups2Rows <- groups10tworows
+cex.lab <- 1.5
+cex.xaxis <- 0.5
+cex.yaxis <- 1.3
+cex.leg <- 1.1
+ci.lwd <- 2.5
+ymax <- 4000  # max(sapply(list(KMA2014_Annual_Stratified_HarvestEstimatesStats, KMA2015_Annual_Stratified_HarvestEstimatesStats, KMA2016_Annual_Stratified_HarvestEstimatesStats), function(strata) {strata[, "95%"]}))
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Make figures as .emf files
+
+# dir.create("Figures/All Years")
+require(devEMF)
+require(gplots)
+
+
+
+emf(file = "Figures/All Years/KMA Harvest 2014-2016.emf", width = 6, height = 5.75, family = "serif", bg = "white")
+
+
+layout(mat = layoutmat, widths = c(0.075, 1), heights = c(2.7, 0.15))
+par(mar = rep(0, 4))
+par(family = "times")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Y-axis label
+plot.new()
+text(x = 0.25, y = 0.5, labels = "Number of Fish Harvested", srt = 90, cex = cex.lab)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Barplot
+par(mar = c(1, 1, 1.5, 1))
+Barplot <- barplot2(height = t(cbind(KMA2014_Annual_Stratified_HarvestEstimatesStats[, "median"],
+                                     KMA2015_Annual_Stratified_HarvestEstimatesStats[, "median"],
+                                     KMA2016_Annual_Stratified_HarvestEstimatesStats[, "median"])), 
+                    beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                    ci.l = t(cbind(KMA2014_Annual_Stratified_HarvestEstimatesStats[, "5%"],
+                                   KMA2015_Annual_Stratified_HarvestEstimatesStats[, "5%"],
+                                   KMA2016_Annual_Stratified_HarvestEstimatesStats[, "5%"])), 
+                    ci.u = t(cbind(KMA2014_Annual_Stratified_HarvestEstimatesStats[, "95%"],
+                                   KMA2015_Annual_Stratified_HarvestEstimatesStats[, "95%"],
+                                   KMA2016_Annual_Stratified_HarvestEstimatesStats[, "95%"])), 
+                    ylim = c(0, ymax), col = ProportionColors, yaxt = "n", xaxt = 'n')
+axis(side = 2, at = seq(0, ymax, 1000), labels = formatC(x = seq(0, ymax, 1000), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+legend(legend = 2014:2016, x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="")
+abline(h = 0, xpd = FALSE)
+
+mtext(text = Groups2Rows, side = 1, line = 0.66, at = apply(Barplot, 2, mean), adj = 0.5, cex = cex.xaxis)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Blank Corner
+par(mar = rep(0, 4))
+plot.new()
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## x-axis label
+par(mar = rep(0, 4))
+plot.new()
+text(x = 0.5, y = 0.25, labels = "Reporting Group", cex = cex.lab)
+
+
+dev.off()
+
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Table Annual KMA Results ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# dir.create("Estimates tables")
+require(xlsx)
+
+for(yr in 14:16){
+  
+  EstimatesStats <- dget(file = paste0("Estimates objects/Final/KMA20", yr, "_Annual_Stratified_EstimatesStats.txt"))
+  HarvestEstimatesStats <- dget(file = paste0("Estimates objects/Final/KMA20", yr, "_Annual_Stratified_HarvestEstimatesStats.txt"))
+  
+  Caption <- paste("Table X.-Annual estimates of stock composition (%) and stock-specific harvest for KMA, 20", yr,
+                   ". Estimates include median, 90% credibility interval (CI), the probability that the group estimate is equal to zero (P=0), mean, and SD.",
+                   sep = '')
+  
+  
+  Disclaimer <- "Note: Stock composition estimates may not sum to 100% and stock-specific harvest estimates may not sum to the total harvest due to rounding error."
+  
+  
+  TableX <- matrix(data = "", nrow = 16, ncol = 13)
+  
+  TableX[1, 1] <- Caption
+  TableX[2, c(2, 9)] <- c("Stock Composition", "Stock-specific Harvest")
+  TableX[3, c(3, 10)] <- rep("90% CI", 2)
+  TableX[4, c(1, 2:4, 6:7, 9:13, 5)] <- c("Reporting Group", rep(c("Median", "5%", "95%", "Mean", "SD"), 2), "P=0")
+  TableX[5:14, 1] <- groups10
+  TableX[5:14, c(2:4, 6:7)] <- formatC(x = EstimatesStats[, c("median", "5%", "95%", "mean", "sd")] * 100, digits = 1, format = "f")
+  TableX[5:14, 5] <- formatC(x = EstimatesStats[, "P=0"], digits = 2, format = "f")
+  TableX[5:14, 9:13] <- formatC(x = HarvestEstimatesStats[, c("median", "5%", "95%", "mean", "sd")], digits = 0, format = "f", big.mark = ",")
+  TableX[15, 11:12] <- c("Total", formatC(x = sum(HarvestEstimatesStats[, "mean"]), digits = 0, format = "f", big.mark = ","))
+  TableX[16, 1] <- Disclaimer
+  
+  
+  write.xlsx(x = as.data.frame(TableX), 
+             file = "Estimates tables/KMA Chinook Estimates Tables.xlsx",
+             col.names = FALSE, row.names = FALSE, append = TRUE, sheetName = paste0("KMA20", yr))
+}; beep(5)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
