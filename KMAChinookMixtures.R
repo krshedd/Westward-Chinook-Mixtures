@@ -3844,3 +3844,31 @@ for(yr in 14:16){
 }; beep(5)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### GIS Maps ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Which of Andy's 211 do not match up with mine!!!
+andy211 <- readClipboard()
+which(!sapply(1:211, function(i) {andy211[i] %in% unlist(strsplit(x = KMA211Pops[i], split = "\\."))}))
+
+grep(pattern = andy211[2], x = KMA211Pops)
+
+
+maporder <- sapply(andy211, function(pop) {
+  x <- grep(pattern = pop, x = KMA211Pops)
+  ifelse(length(x) == 0, NA, x)
+  })
+
+# Confirm that the NAs are still the same ones
+maporder[is.na(maporder)] <- which(is.na(maporder))
+
+plot(maporder)
+
+# Confirm that the groupvec doesn't change with map order
+table(groups10[groupvec10] == groups10[groupvec10[maporder]])  # it doesn't
+
+# Add colors to GIS map
+cbind(groups10, colors10)
+t(rbind(groups10, col2rgb(colors10)))
