@@ -974,7 +974,7 @@ ColorTree <- treeColor.GCL(tree = KMA211Pops42Loci_PairwiseFstTree$tree, current
 dput(x = ColorTree, file = "Trees/ColorTree.txt")
 str(ColorTree)
 
-groups10short <- c("Russia", "CWAK / Yukon", "North Peninsula", "Chignik", "Kodiak", "Cook Inlet", "Copper", "Souteast AK", "British Columbia", "West Coast US")
+groups10short <- c("Russia", "Eastern Bering Sea", "North Peninsula", "Chignik", "Kodiak", "Cook Inlet", "Copper", "Souteast AK", "British Columbia", "West Coast US")
 dput(x = groups10short, file = "Objects/groups10short.txt")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1029,26 +1029,26 @@ legend(locator(1), legend = groups10short, fill = colors10, bty = "n")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Tree with no labels + legend
-emf(file = "Trees/KMA211Pops42LociFstColorTreeNoLabelsNoMar.emf", width = 9, height = 6.67)
+emf(file = "Trees/KMA211Pops42LociFstColorTreeNoLabelsNoMar.emf", width = 9, height = 6)
 par(oma = c(4, 0, 0, 0))
 plot.phylo(x = ColorTree$tree, edge.color = ColorTree$color, edge.width = 3, use.edge.length = TRUE, 
            show.tip.label = FALSE, adj = 0.05, font = 0.2, cex = 0.8, no.margin = TRUE, type = "p")  # cex = 0.8
 axisPhylo(1, las = 1, backward = FALSE)
 mtext(text=expression(italic(F)[ST]), side = 1, cex = 1.5, outer = FALSE, line = 3, adj = 0.5)
 # legend(x = "topright", legend = groups10short, fill = colors10, bty = "n", cex = 1)
-legend(x = 0.45, y = 220, legend = groups10short, fill = colors10, bty = "n", cex = 1.1)
+legend(x = 0.45, y = 220, legend = groups10short, fill = colors10, bty = "n", cex = 1)
 dev.off()
 
 
 
-png(file = "Trees/KMA211Pops42LociFstColorTreeNoLabelsNoMar.png", width = 9, height = 6.67, units = "in", res = 500)
+png(file = "Trees/KMA211Pops42LociFstColorTreeNoLabelsNoMar.png", width = 9, height = 6, units = "in", res = 500)
 par(oma = c(4, 0, 0, 0))
 plot.phylo(x = ColorTree$tree, edge.color = ColorTree$color, edge.width = 3, use.edge.length = TRUE, 
            show.tip.label = FALSE, adj = 0.05, font = 0.2, cex = 0.8, no.margin = TRUE, type = "p")  # cex = 0.8
 axisPhylo(1, las = 1, backward = FALSE)
 mtext(text=expression(italic(F)[ST]), side = 1, cex = 1.5, outer = FALSE, line = 3, adj = 0.5)
 # legend(x = "topright", legend = groups10short, fill = colors10, bty = "n", cex = 1)
-legend(x = 0.45, y = 220, legend = groups10short, fill = colors10, bty = "n", cex = 1.1)
+legend(x = 0.45, y = 220, legend = groups10short, fill = colors10, bty = "n", cex = 1)
 dev.off()
 
 
