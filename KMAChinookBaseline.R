@@ -974,7 +974,7 @@ ColorTree <- treeColor.GCL(tree = KMA211Pops42Loci_PairwiseFstTree$tree, current
 dput(x = ColorTree, file = "Trees/ColorTree.txt")
 str(ColorTree)
 
-groups10short <- c("Russia", "Eastern Bering Sea", "North Peninsula", "Chignik", "Kodiak", "Cook Inlet", "Copper", "Souteast AK", "British Columbia", "West Coast US")
+groups10short <- c("Russia", "Eastern Bering Sea", "North Peninsula", "Chignik", "Kodiak", "Cook Inlet", "Copper", "Southeast AK", "British Columbia", "West Coast US")
 dput(x = groups10short, file = "Objects/groups10short.txt")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
