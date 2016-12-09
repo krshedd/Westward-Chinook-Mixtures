@@ -523,7 +523,7 @@ KMA211PopsChinookSeeds <- matrix(sample(seq(10000), 3 * 5), nrow = 3)
 dput(x = KMA211PopsChinookSeeds, file = "KMA211PopsChinookSeeds.txt")
 
 # Groups 2 Row
-groups10tworows <- c("Russia", "CWAK\nYukon", "North\nPen", "Chignik", "Kodiak", "Cook\nInlet", "Copper", "SEAK", "British\nColumbia", "West\nCoast US")
+groups10tworows <- c("Russia\n", "Eastern\nBering", "North\nPen", "Chignik\n", "Kodiak\n", "Cook\nInlet", "Copper\n", "SEAK\n", "British\nColumbia", "West\nCoast US")
 dput(x = groups10tworows, file = "groups10tworows.txt")
 
 setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures")
@@ -2559,6 +2559,17 @@ sapply(KMA2016, function(geomix) {
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### Bubble Charts ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Sport Harvest 2014-2016/Mixtures")
+
+KMARS14_EstimatesStats <- dget(file = "Estimates objects/KMARS14_EstimatesStats.txt")
+KMARS15_EstimatesStats <- dget(file = "Estimates objects/KMARS15_EstimatesStats.txt")
+KMARS16_EstimatesStats <- dget(file = "Estimates objects/KMARS16_80K_EstimatesStats.txt")
+
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures")
+
+groups10short <- c("Russia", "Eastern Bering", "North Peninsula", "Chignik", "Kodiak", "Cook Inlet", "Copper", "Southeast AK", "British Columbia", "West Coast US")
+dput(x = groups10short, file = "Objects/groups10short.txt")
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Create a matrix of annual means
 #~~~~~~~~~~~~~~~~~~
@@ -2572,10 +2583,11 @@ rownames(Annual2014_Stratified_Estimates) <- groups10short
 
 KMA2014_Annual_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2014_Annual_HarvestEstimatesStats.txt")
 Annual2014_Stratified_HarvestEstimates <- sapply(KMA2014, function(geomix) {
-  round(KMA2014_Annual_HarvestEstimatesStats[[geomix]][, "mean"])
+  round(KMA2014_Annual_HarvestEstimatesStats[[geomix]][, "median"])
 })
 rownames(Annual2014_Stratified_HarvestEstimates) <- groups10short
 
+Annual2014_Stratified_HarvestEstimates <- cbind(Annual2014_Stratified_HarvestEstimates, "KMARS14" = round(KMARS14_EstimatesStats$KMARS14[, "median"] * 8049))
 
 
 #~~~~~~~~~~~~~~~~~~
@@ -2589,10 +2601,11 @@ rownames(Annual2015_Stratified_Estimates) <- groups10short
 
 KMA2015_Annual_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2015_Annual_HarvestEstimatesStats.txt")
 Annual2015_Stratified_HarvestEstimates <- sapply(KMA2015, function(geomix) {
-  round(KMA2015_Annual_HarvestEstimatesStats[[geomix]][, "mean"])
+  round(KMA2015_Annual_HarvestEstimatesStats[[geomix]][, "median"])
 })
 rownames(Annual2015_Stratified_HarvestEstimates) <- groups10short
 
+Annual2015_Stratified_HarvestEstimates <- cbind(Annual2015_Stratified_HarvestEstimates, "KMARS15" = round(KMARS15_EstimatesStats$KMARS15[, "median"] * 6709))
 
 
 #~~~~~~~~~~~~~~~~~~
@@ -2606,9 +2619,11 @@ rownames(Annual2016_Stratified_Estimates) <- groups10short
 
 KMA2016_Annual_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2016_Annual_HarvestEstimatesStats.txt")
 Annual2016_Stratified_HarvestEstimates <- sapply(KMA2016, function(geomix) {
-  round(KMA2016_Annual_HarvestEstimatesStats[[geomix]][, "mean"])
+  round(KMA2016_Annual_HarvestEstimatesStats[[geomix]][, "median"])
 })
 rownames(Annual2016_Stratified_HarvestEstimates) <- groups10short
+
+Annual2016_Stratified_HarvestEstimates <- cbind(Annual2016_Stratified_HarvestEstimates, "KMARS16" = rep(0, 10))
 
 
 
@@ -2660,6 +2675,36 @@ ggplot(data = Annual2014_Stratified_HarvestEstimates_df, aes(x = Fishery, y = RG
   ggtitle("2014 Harvest")
 
 
+# Figure for Report
+zmax = 4000; max(Annual2014_Stratified_HarvestEstimates, Annual2015_Stratified_HarvestEstimates, Annual2016_Stratified_HarvestEstimates)
+
+colnames(Annual2014_Stratified_HarvestEstimates) <- c("SW/Alitak", "Eastside", "Westside", "Mainland", "Sport")
+
+Annual2014_Stratified_HarvestEstimates_df <- melt(Annual2014_Stratified_HarvestEstimates)
+names(Annual2014_Stratified_HarvestEstimates_df) <- c("RG", "Fishery", "Harvest")
+Annual2014_Stratified_HarvestEstimates_df$RG <- factor(Annual2014_Stratified_HarvestEstimates_df$RG, levels = groups10short)
+Annual2014_Stratified_HarvestEstimates_df$Fishery <- factor(Annual2014_Stratified_HarvestEstimates_df$Fishery, levels = rev(c("Westside", "SW/Alitak", "Eastside", "Mainland", "Sport")))
+Annual2014_Stratified_HarvestEstimates_df$Color <- rep(colors10, 5)
+Annual2014_Stratified_HarvestEstimates_df$Harvest[Annual2014_Stratified_HarvestEstimates_df$Harvest == 0] <- NA
+str(Annual2014_Stratified_HarvestEstimates_df)
+
+require(devEMF)
+emf(file ="Figures/All Years/2014 Harvest Bubble Plot.emf", width = 9, height = 5.75, family = "serif", bg = "white")
+
+ggplot(data = Annual2014_Stratified_HarvestEstimates_df, aes(x = RG, y = Fishery, size = Harvest, color = RG)) + 
+  geom_point() + 
+  scale_size_continuous(limits = c(0, zmax), breaks = seq(1000, 4000, 1000), range = c(0, 20)) + 
+  scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
+  xlab("Reporting Group") + ylab("Sampling Area") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0.2,0,0), "cm"))) +
+  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0.2,0,0,0), "cm"))) +
+  theme(legend.title = element_text(size = rel(1.8), angle = 00)) +
+  theme(text = element_text(family = "times"))
+
+dev.off()
+
+
 # 2015
 Annual2015_Stratified_HarvestEstimates_df <- melt(Annual2015_Stratified_HarvestEstimates)
 names(Annual2015_Stratified_HarvestEstimates_df) <- c("RG", "Fishery", "Harvest")
@@ -2677,6 +2722,38 @@ ggplot(data = Annual2015_Stratified_HarvestEstimates_df, aes(x = Fishery, y = RG
   ggtitle("2015 Harvest")
 
 
+# Figure for Report
+zmax = 4000; max(Annual2015_Stratified_HarvestEstimates, Annual2015_Stratified_HarvestEstimates, Annual2016_Stratified_HarvestEstimates)
+
+colnames(Annual2015_Stratified_HarvestEstimates) <- c("SW/Alitak", "Eastside", "Westside", "Mainland", "Sport")
+
+Annual2015_Stratified_HarvestEstimates_df <- melt(Annual2015_Stratified_HarvestEstimates)
+names(Annual2015_Stratified_HarvestEstimates_df) <- c("RG", "Fishery", "Harvest")
+Annual2015_Stratified_HarvestEstimates_df$RG <- factor(Annual2015_Stratified_HarvestEstimates_df$RG, levels = groups10short)
+Annual2015_Stratified_HarvestEstimates_df$Fishery <- factor(Annual2015_Stratified_HarvestEstimates_df$Fishery, levels = rev(c("Westside", "SW/Alitak", "Eastside", "Mainland", "Sport")))
+Annual2015_Stratified_HarvestEstimates_df$Color <- rep(colors10, 5)
+Annual2015_Stratified_HarvestEstimates_df$Harvest[Annual2015_Stratified_HarvestEstimates_df$Harvest == 0] <- NA
+str(Annual2015_Stratified_HarvestEstimates_df)
+
+require(devEMF)
+emf(file ="Figures/All Years/2015 Harvest Bubble Plot.emf", width = 9, height = 5.75, family = "serif", bg = "white")
+
+ggplot(data = Annual2015_Stratified_HarvestEstimates_df, aes(x = RG, y = Fishery, size = Harvest, color = RG)) + 
+  geom_point() + 
+  scale_size_continuous(limits = c(0, zmax), breaks = seq(1000, 4000, 1000), range = c(0, 20)) + 
+  scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
+  xlab("Reporting Group") + ylab("Sampling Area") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0.2,0,0), "cm"))) +
+  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0.2,0,0,0), "cm"))) +
+  theme(legend.title = element_text(size = rel(1.8), angle = 00)) +
+  theme(text = element_text(family = "times"))
+
+dev.off()
+
+
+
+
 # 2016
 Annual2016_Stratified_HarvestEstimates_df <- melt(Annual2016_Stratified_HarvestEstimates)
 names(Annual2016_Stratified_HarvestEstimates_df) <- c("RG", "Fishery", "Harvest")
@@ -2692,6 +2769,59 @@ ggplot(data = Annual2016_Stratified_HarvestEstimates_df, aes(x = Fishery, y = RG
   scale_size_continuous(limits = c(0, 1600), breaks = seq(500, 1500, 500), range = c(0, 25)) + 
   scale_color_manual(values = rev(rep(colors10, 4))) +
   ggtitle("2016 Harvest")
+
+
+# Figure for Report
+zmax = 4000; max(Annual2016_Stratified_HarvestEstimates, Annual2016_Stratified_HarvestEstimates, Annual2016_Stratified_HarvestEstimates)
+
+colnames(Annual2016_Stratified_HarvestEstimates) <- c("SW/Alitak", "Eastside", "Westside", "Mainland", "Sport")
+
+Annual2016_Stratified_HarvestEstimates_df <- melt(Annual2016_Stratified_HarvestEstimates)
+names(Annual2016_Stratified_HarvestEstimates_df) <- c("RG", "Fishery", "Harvest")
+Annual2016_Stratified_HarvestEstimates_df$RG <- factor(Annual2016_Stratified_HarvestEstimates_df$RG, levels = groups10short)
+Annual2016_Stratified_HarvestEstimates_df$Fishery <- factor(Annual2016_Stratified_HarvestEstimates_df$Fishery, levels = rev(c("Westside", "SW/Alitak", "Eastside", "Mainland", "Sport")))
+Annual2016_Stratified_HarvestEstimates_df$Color <- rep(colors10, 5)
+Annual2016_Stratified_HarvestEstimates_df$Harvest[Annual2016_Stratified_HarvestEstimates_df$Harvest == 0] <- NA
+str(Annual2016_Stratified_HarvestEstimates_df)
+
+require(devEMF)
+emf(file ="Figures/All Years/2016 Harvest Bubble Plot.emf", width = 9, height = 5.75, family = "serif", bg = "white")
+
+ggplot(data = Annual2016_Stratified_HarvestEstimates_df, aes(x = RG, y = Fishery, size = Harvest, color = RG)) + 
+  geom_point() + 
+  scale_size_continuous(limits = c(0, zmax), breaks = seq(1000, 4000, 1000), range = c(0, 20)) + 
+  scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
+  xlab("Reporting Group") + ylab("Sampling Area") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0.2,0,0), "cm"))) +
+  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0.2,0,0,0), "cm"))) +
+  theme(legend.title = element_text(size = rel(1.8), angle = 00)) +
+  theme(text = element_text(family = "times"))
+
+dev.off()
+
+
+
+
+
+Annual2016_Stratified_HarvestEstimates_df$Harvest <- NA
+Annual2016_Stratified_HarvestEstimates_df$Harvest[1] <- 0
+
+emf(file ="Figures/All Years/Blank Harvest Bubble Plot.emf", width = 9, height = 5.75, family = "serif", bg = "white")
+
+ggplot(data = Annual2016_Stratified_HarvestEstimates_df, aes(x = RG, y = Fishery, size = Harvest, color = RG)) + 
+  geom_point() + 
+  scale_size_continuous(limits = c(0, zmax), breaks = seq(1000, 4000, 1000), range = c(0, 20)) + 
+  scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
+  xlab("Reporting Group") + ylab("Sampling Area") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0.2,0,0), "cm"))) +
+  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0.2,0,0,0), "cm"))) +
+  theme(legend.title = element_text(size = rel(1.8), angle = 00)) +
+  theme(text = element_text(family = "times"))
+
+dev.off()
+
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2870,6 +3000,69 @@ sapply(GeoMix, function(geomix) {
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+emf(file = paste("Figures/All Years/Blank.emf", sep = ''), width = 6, height = 5.75, family = "serif", bg = "white")
+
+
+layout(mat = layoutmat, widths = c(0.075, 1, 1), heights = c(0.9, 0.9, 0.9, 0.15))
+par(mar = rep(0, 4))
+par(family = "times")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Y-axis label
+plot.new()
+text(x = 0.25, y = 0.5, labels = "Percentage of Catch", srt = 90, cex = cex.lab)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## 2014 Barplot
+par(mar = c(1, 1, 1.5, 1))
+Barplot14 <- barplot2(height = matrix(data = 0, nrow = 2, ncol = 10), 
+                      beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                      ci.l = matrix(data = 0, nrow = 2, ncol = 10), 
+                      ci.u = matrix(data = 0, nrow = 2, ncol = 10), 
+                      ylim = c(0, 100), col = ProportionColors, yaxt = "n", xaxt = 'n')
+axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+legend(legend = paste("Temporal Stratum", 1:2), x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="2014")
+abline(h = 0, xpd = FALSE)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## 2015 Barplot
+par(mar = c(1, 1, 1.5, 1))
+Barplot15 <- barplot2(height = matrix(data = 0, nrow = 2, ncol = 10), 
+                      beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                      ci.l = matrix(data = 0, nrow = 2, ncol = 10), 
+                      ci.u = matrix(data = 0, nrow = 2, ncol = 10), 
+                      ylim = c(0, 100), col = ProportionColors, yaxt = "n", xaxt = 'n')
+axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+legend(legend = paste("Temporal Stratum", 1:2), x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="2015")
+abline(h = 0, xpd = FALSE)
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## 2016 Barplot
+par(mar = c(1, 1, 1.5, 1))
+Barplot16 <- barplot2(height = matrix(data = 0, nrow = 2, ncol = 10), 
+                      beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                      ci.l = matrix(data = 0, nrow = 2, ncol = 10), 
+                      ci.u = matrix(data = 0, nrow = 2, ncol = 10), 
+                      ylim = c(0, 100), col = ProportionColors, yaxt = "n", xaxt = 'n')
+axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+legend(legend = paste("Temporal Stratum", 1:2), x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="2016")
+abline(h = 0, xpd = FALSE)
+
+mtext(text = Groups2Rows, side = 1, line = 1, at = apply(Barplot16, 2, mean), adj = 0.5, cex = cex.xaxis)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Blank Corner
+par(mar = rep(0, 4))
+plot.new()
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## x-axis label
+par(mar = rep(0, 4))
+plot.new()
+text(x = 0.5, y = 0.25, labels = "Reporting Group", cex = cex.lab)
+
+
+dev.off()
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3712,6 +3905,47 @@ dev.off()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+
+emf(file = "Figures/All Years/KMA Proportions 2014-2016 Blank.emf", width = 6, height = 5.75, family = "serif", bg = "white")
+
+
+layout(mat = layoutmat, widths = c(0.075, 1), heights = c(2.7, 0.15))
+par(mar = rep(0, 4))
+par(family = "times")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Y-axis label
+plot.new()
+text(x = 0.25, y = 0.5, labels = "Percentage of KMA Harvest", srt = 90, cex = cex.lab)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Barplot
+par(mar = c(1, 1, 1.5, 1))
+Barplot <- barplot2(height = matrix(data = 0, nrow = 2, ncol = 10), 
+                    beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                    ci.l = matrix(data = 0, nrow = 2, ncol = 10), 
+                    ci.u = matrix(data = 0, nrow = 2, ncol = 10), 
+                    ylim = c(0, 100), col = ProportionColors, yaxt = "n", xaxt = 'n')
+axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+legend(legend = 2014:2016, x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="")
+abline(h = 0, xpd = FALSE)
+
+mtext(text = Groups2Rows, side = 1, line = 0.66, at = apply(Barplot, 2, mean), adj = 0.5, cex = cex.xaxis)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Blank Corner
+par(mar = rep(0, 4))
+plot.new()
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## x-axis label
+par(mar = rep(0, 4))
+plot.new()
+text(x = 0.5, y = 0.25, labels = "Reporting Group", cex = cex.lab)
+
+
+dev.off()
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### Plot Annual KMA Harvest ####
