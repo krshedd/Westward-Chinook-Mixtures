@@ -2678,6 +2678,9 @@ ggplot(data = Annual2014_Stratified_HarvestEstimates_df, aes(x = Fishery, y = RG
 # Figure for Report
 zmax = 4000; max(Annual2014_Stratified_HarvestEstimates, Annual2015_Stratified_HarvestEstimates, Annual2016_Stratified_HarvestEstimates)
 
+Groups2RowsBubble <- Groups2Rows
+Groups2RowsBubble[c(1,4,5,7,8)] <- gsub(pattern = "\n", replacement = "", x = Groups2Rows[c(1,4,5,7,8)])
+
 colnames(Annual2014_Stratified_HarvestEstimates) <- c("SW/Alitak", "Eastside", "Westside", "Mainland", "Sport")
 
 Annual2014_Stratified_HarvestEstimates_df <- melt(Annual2014_Stratified_HarvestEstimates)
@@ -2693,12 +2696,12 @@ emf(file ="Figures/All Years/2014 Harvest Bubble Plot.emf", width = 9, height = 
 
 ggplot(data = Annual2014_Stratified_HarvestEstimates_df, aes(x = RG, y = Fishery, size = Harvest, color = RG)) + 
   geom_point() + 
-  scale_size_continuous(limits = c(0, zmax), breaks = seq(1000, 4000, 1000), range = c(0, 20)) + 
-  scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
-  xlab("Reporting Group") + ylab("Sampling Area") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_size_continuous(limits = c(0, zmax), breaks = c(50, 100, 200, 500, seq(1000, 4000, 1000)), range = c(0, 20), labels = c("50", "100", "200", "500", "1,000", "2,000", "3,000", "4,000")) +   scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
+  scale_x_discrete(name = "Reporting Group", labels = Groups2RowsBubble) +
+  scale_y_discrete(name = "Sampling Area", labels = rev(c("NW Kodiak\nAfognak", "SW Kodiak\nAlitak", "Eastside\nKodiak", "Mainland", "Marine\nSport"))) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
   theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0.2,0,0), "cm"))) +
-  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0.2,0,0,0), "cm"))) +
+  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0,0,0,0), "cm"))) +
   theme(legend.title = element_text(size = rel(1.8), angle = 00)) +
   theme(text = element_text(family = "times"))
 
@@ -2740,12 +2743,12 @@ emf(file ="Figures/All Years/2015 Harvest Bubble Plot.emf", width = 9, height = 
 
 ggplot(data = Annual2015_Stratified_HarvestEstimates_df, aes(x = RG, y = Fishery, size = Harvest, color = RG)) + 
   geom_point() + 
-  scale_size_continuous(limits = c(0, zmax), breaks = seq(1000, 4000, 1000), range = c(0, 20)) + 
-  scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
-  xlab("Reporting Group") + ylab("Sampling Area") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_size_continuous(limits = c(0, zmax), breaks = c(50, 100, 200, 500, seq(1000, 4000, 1000)), range = c(0, 20), labels = c("50", "100", "200", "500", "1,000", "2,000", "3,000", "4,000")) +   scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
+  scale_x_discrete(name = "Reporting Group", labels = Groups2RowsBubble) +
+  scale_y_discrete(name = "Sampling Area", labels = rev(c("NW Kodiak\nAfognak", "SW Kodiak\nAlitak", "Eastside\nKodiak", "Mainland", "Marine\nSport"))) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
   theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0.2,0,0), "cm"))) +
-  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0.2,0,0,0), "cm"))) +
+  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0,0,0,0), "cm"))) +
   theme(legend.title = element_text(size = rel(1.8), angle = 00)) +
   theme(text = element_text(family = "times"))
 
@@ -2789,12 +2792,12 @@ emf(file ="Figures/All Years/2016 Harvest Bubble Plot.emf", width = 9, height = 
 
 ggplot(data = Annual2016_Stratified_HarvestEstimates_df, aes(x = RG, y = Fishery, size = Harvest, color = RG)) + 
   geom_point() + 
-  scale_size_continuous(limits = c(0, zmax), breaks = seq(1000, 4000, 1000), range = c(0, 20)) + 
-  scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
-  xlab("Reporting Group") + ylab("Sampling Area") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_size_continuous(limits = c(0, zmax), breaks = c(50, 100, 200, 500, seq(1000, 4000, 1000)), range = c(0, 20), labels = c("50", "100", "200", "500", "1,000", "2,000", "3,000", "4,000")) +   scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
+  scale_x_discrete(name = "Reporting Group", labels = Groups2RowsBubble) +
+  scale_y_discrete(name = "Sampling Area", labels = rev(c("NW Kodiak\nAfognak", "SW Kodiak\nAlitak", "Eastside\nKodiak", "Mainland", "Marine\nSport"))) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
   theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0.2,0,0), "cm"))) +
-  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0.2,0,0,0), "cm"))) +
+  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0,0,0,0), "cm"))) +
   theme(legend.title = element_text(size = rel(1.8), angle = 00)) +
   theme(text = element_text(family = "times"))
 
@@ -2811,12 +2814,13 @@ emf(file ="Figures/All Years/Blank Harvest Bubble Plot.emf", width = 9, height =
 
 ggplot(data = Annual2016_Stratified_HarvestEstimates_df, aes(x = RG, y = Fishery, size = Harvest, color = RG)) + 
   geom_point() + 
-  scale_size_continuous(limits = c(0, zmax), breaks = seq(1000, 4000, 1000), range = c(0, 20)) + 
+  scale_size_continuous(limits = c(0, zmax), breaks = c(50, 100, 200, 500, seq(1000, 4000, 1000)), range = c(0, 20), labels = c("50", "100", "200", "500", "1,000", "2,000", "3,000", "4,000")) + 
   scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
-  xlab("Reporting Group") + ylab("Sampling Area") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_x_discrete(name = "Reporting Group", labels = Groups2RowsBubble) +
+  scale_y_discrete(name = "Sampling Area", labels = rev(c("NW Kodiak\nAfognak", "SW Kodiak\nAlitak", "Eastside\nKodiak", "Mainland", "Marine\nSport"))) +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
   theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0.2,0,0), "cm"))) +
-  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0.2,0,0,0), "cm"))) +
+  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0,0,0,0), "cm"))) +
   theme(legend.title = element_text(size = rel(1.8), angle = 00)) +
   theme(text = element_text(family = "times"))
 
@@ -3022,7 +3026,7 @@ Barplot14 <- barplot2(height = matrix(data = 0, nrow = 2, ncol = 10),
                       ci.u = matrix(data = 0, nrow = 2, ncol = 10), 
                       ylim = c(0, 100), col = ProportionColors, yaxt = "n", xaxt = 'n')
 axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
-legend(legend = paste("Temporal Stratum", 1:2), x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="2014")
+legend(legend = c("Early", "Late"), x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="2014")
 abline(h = 0, xpd = FALSE)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3034,7 +3038,7 @@ Barplot15 <- barplot2(height = matrix(data = 0, nrow = 2, ncol = 10),
                       ci.u = matrix(data = 0, nrow = 2, ncol = 10), 
                       ylim = c(0, 100), col = ProportionColors, yaxt = "n", xaxt = 'n')
 axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
-legend(legend = paste("Temporal Stratum", 1:2), x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="2015")
+legend(legend = c("Early", "Late"), x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="2015")
 abline(h = 0, xpd = FALSE)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## 2016 Barplot
@@ -3045,7 +3049,7 @@ Barplot16 <- barplot2(height = matrix(data = 0, nrow = 2, ncol = 10),
                       ci.u = matrix(data = 0, nrow = 2, ncol = 10), 
                       ylim = c(0, 100), col = ProportionColors, yaxt = "n", xaxt = 'n')
 axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
-legend(legend = paste("Temporal Stratum", 1:2), x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="2016")
+legend(legend = c("Early", "Late"), x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="2016")
 abline(h = 0, xpd = FALSE)
 
 mtext(text = Groups2Rows, side = 1, line = 1, at = apply(Barplot16, 2, mean), adj = 0.5, cex = cex.xaxis)
