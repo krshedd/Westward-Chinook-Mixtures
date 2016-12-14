@@ -868,7 +868,7 @@ layoutmat <- matrix(data=c(  1, 2,
 Groups <- groups10
 Groups2Rows <- groups10tworows
 cex.lab <- 1.5
-cex.xaxis <- 0.5
+cex.xaxis <- 0.7
 cex.yaxis <- 1.3
 cex.leg <- 1.1
 ci.lwd <- 2.5
@@ -934,7 +934,7 @@ axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.m
 legend(legend = "May 22-August 13", x = "topleft", fill = "blue", border = "black", bty = "n", cex = cex.leg, title="2016")
 abline(h = 0, xpd = FALSE)
 
-mtext(text = Groups2Rows, side = 1, line = 1, at = Barplot16, adj = 0.5, cex = cex.xaxis)
+mtext(text = Groups2Rows, side = 1, line = 1.1, at = Barplot16, adj = 0.5, cex = cex.xaxis)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Blank Corner
