@@ -524,7 +524,7 @@ dput(x = KMA211PopsChinookSeeds, file = "KMA211PopsChinookSeeds.txt")
 
 # Groups 2 Row
 groups10tworows <- c("Russia\n", "Eastern\nBering", "North\nPen", "Chignik\n", "Kodiak\n", "Cook\nInlet", "Copper\n", "SEAK\n", "British\nColumbia", "West\nCoast US")
-dput(x = groups10tworows, file = "groups10tworows.txt")
+dput(x = groups10tworows, file = "Objects/groups10tworows.txt")
 
 setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures")
 
@@ -2699,9 +2699,10 @@ ggplot(data = Annual2014_Stratified_HarvestEstimates_df, aes(x = RG, y = Fishery
   scale_size_continuous(limits = c(0, zmax), breaks = c(50, 100, 200, 500, seq(1000, 4000, 1000)), range = c(0, 20), labels = c("50", "100", "200", "500", "1,000", "2,000", "3,000", "4,000")) +   scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
   scale_x_discrete(name = "Reporting Group", labels = Groups2RowsBubble) +
   scale_y_discrete(name = "Sampling Area", labels = rev(c("NW Kodiak\nAfognak", "SW Kodiak\nAlitak", "Eastside\nKodiak", "Mainland", "Marine\nSport"))) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
-  theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0.2,0,0), "cm"))) +
-  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0,0,0,0), "cm"))) +
+  theme(axis.text.x = element_text(size = rel(1.3), angle = 90, hjust = 1, vjust = 0.5)) +
+  theme(axis.text.y = element_text(size = rel(1.3))) +
+  theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0,0,0), "cm"))) +
+  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(-0.2,0,0,0), "cm"))) +
   theme(legend.title = element_text(size = rel(1.8), angle = 00)) +
   theme(text = element_text(family = "times"))
 
@@ -2746,9 +2747,10 @@ ggplot(data = Annual2015_Stratified_HarvestEstimates_df, aes(x = RG, y = Fishery
   scale_size_continuous(limits = c(0, zmax), breaks = c(50, 100, 200, 500, seq(1000, 4000, 1000)), range = c(0, 20), labels = c("50", "100", "200", "500", "1,000", "2,000", "3,000", "4,000")) +   scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
   scale_x_discrete(name = "Reporting Group", labels = Groups2RowsBubble) +
   scale_y_discrete(name = "Sampling Area", labels = rev(c("NW Kodiak\nAfognak", "SW Kodiak\nAlitak", "Eastside\nKodiak", "Mainland", "Marine\nSport"))) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
-  theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0.2,0,0), "cm"))) +
-  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0,0,0,0), "cm"))) +
+  theme(axis.text.x = element_text(size = rel(1.3), angle = 90, hjust = 1, vjust = 0.5)) +
+  theme(axis.text.y = element_text(size = rel(1.3))) +
+  theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0,0,0), "cm"))) +
+  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(-0.2,0,0,0), "cm"))) +
   theme(legend.title = element_text(size = rel(1.8), angle = 00)) +
   theme(text = element_text(family = "times"))
 
@@ -2795,9 +2797,10 @@ ggplot(data = Annual2016_Stratified_HarvestEstimates_df, aes(x = RG, y = Fishery
   scale_size_continuous(limits = c(0, zmax), breaks = c(50, 100, 200, 500, seq(1000, 4000, 1000)), range = c(0, 20), labels = c("50", "100", "200", "500", "1,000", "2,000", "3,000", "4,000")) +   scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
   scale_x_discrete(name = "Reporting Group", labels = Groups2RowsBubble) +
   scale_y_discrete(name = "Sampling Area", labels = rev(c("NW Kodiak\nAfognak", "SW Kodiak\nAlitak", "Eastside\nKodiak", "Mainland", "Marine\nSport"))) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
-  theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0.2,0,0), "cm"))) +
-  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0,0,0,0), "cm"))) +
+  theme(axis.text.x = element_text(size = rel(1.3), angle = 90, hjust = 1, vjust = 0.5)) +
+  theme(axis.text.y = element_text(size = rel(1.3))) +
+  theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0,0,0), "cm"))) +
+  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(-0.2,0,0,0), "cm"))) +
   theme(legend.title = element_text(size = rel(1.8), angle = 00)) +
   theme(text = element_text(family = "times"))
 
@@ -2814,13 +2817,13 @@ emf(file ="Figures/All Years/Blank Harvest Bubble Plot.emf", width = 9, height =
 
 ggplot(data = Annual2016_Stratified_HarvestEstimates_df, aes(x = RG, y = Fishery, size = Harvest, color = RG)) + 
   geom_point() + 
-  scale_size_continuous(limits = c(0, zmax), breaks = c(50, 100, 200, 500, seq(1000, 4000, 1000)), range = c(0, 20), labels = c("50", "100", "200", "500", "1,000", "2,000", "3,000", "4,000")) + 
-  scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
+  scale_size_continuous(limits = c(0, zmax), breaks = c(50, 100, 200, 500, seq(1000, 4000, 1000)), range = c(0, 20), labels = c("50", "100", "200", "500", "1,000", "2,000", "3,000", "4,000")) +   scale_color_manual(values = rep(colors10, 5), guide = FALSE) +
   scale_x_discrete(name = "Reporting Group", labels = Groups2RowsBubble) +
   scale_y_discrete(name = "Sampling Area", labels = rev(c("NW Kodiak\nAfognak", "SW Kodiak\nAlitak", "Eastside\nKodiak", "Mainland", "Marine\nSport"))) +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
-  theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0.2,0,0), "cm"))) +
-  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(0,0,0,0), "cm"))) +
+  theme(axis.text.x = element_text(size = rel(1.3), angle = 90, hjust = 1, vjust = 0.5)) +
+  theme(axis.text.y = element_text(size = rel(1.3))) +
+  theme(axis.title.y = element_text(size = rel(1.8), angle = 90, margin = unit(c(0,0,0,0), "cm"))) +
+  theme(axis.title.x = element_text(size = rel(1.8), angle = 00, margin = unit(c(-0.2,0,0,0), "cm"))) +
   theme(legend.title = element_text(size = rel(1.8), angle = 00)) +
   theme(text = element_text(family = "times"))
 
@@ -2917,7 +2920,7 @@ Estimates16 <- KMA2016Strata_EstimatesStats
 Groups <- groups10
 Groups2Rows <- groups10tworows
 cex.lab <- 1.5
-cex.xaxis <- 0.5
+cex.xaxis <- 0.7
 cex.yaxis <- 1.3
 cex.leg <- 1.1
 ci.lwd <- 2.5
@@ -2984,7 +2987,7 @@ sapply(GeoMix, function(geomix) {
   legend(legend = TempLegend16[[geomix16]], x = "topleft", fill = TempProportionColors16[[geomix16]], border = "black", bty = "n", cex = cex.leg, title="2016")
   abline(h = 0, xpd = FALSE)
 
-  mtext(text = Groups2Rows, side = 1, line = 1, at = apply(Barplot16, 2, mean), adj = 0.5, cex = cex.xaxis)
+  mtext(text = Groups2Rows, side = 1, line = 1.1, at = apply(Barplot16, 2, mean), adj = 0.5, cex = cex.xaxis)
   
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## Blank Corner
@@ -3052,7 +3055,7 @@ axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.m
 legend(legend = c("Early", "Late"), x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="2016")
 abline(h = 0, xpd = FALSE)
 
-mtext(text = Groups2Rows, side = 1, line = 1, at = apply(Barplot16, 2, mean), adj = 0.5, cex = cex.xaxis)
+mtext(text = Groups2Rows, side = 1, line = 1.1, at = apply(Barplot16, 2, mean), adj = 0.5, cex = cex.xaxis)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Blank Corner
@@ -3098,7 +3101,7 @@ filenames <- setNames(object = c("SW Kodiak Alitak Harvest 2014-2016",
                                  "Mainland Harvest 2014-2016"), nm = GeoMix)
 
 # If showing proportions (percetages) use blue, otherwise green as "low"
-HarvestColors <- colorpanel(n = 2, low = "green", high = "white")
+HarvestColors <- c("darkgreen", "white")
 
 
 #~~~~~~~~~~~~~~~~~~
@@ -3157,7 +3160,7 @@ HarvestEstimates16 <- KMA2016Strata_HarvestEstimatesStats
 Groups <- groups10
 Groups2Rows <- groups10tworows
 cex.lab <- 1.5
-cex.xaxis <- 0.5
+cex.xaxis <- 0.7
 cex.yaxis <- 1.3
 cex.leg <- 1.1
 ci.lwd <- 2.5
@@ -3224,7 +3227,7 @@ sapply(GeoMix, function(geomix) {
   legend(legend = TempLegend16[[geomix16]], x = "topleft", fill = TempHarvestColors16[[geomix16]], border = "black", bty = "n", cex = cex.leg, title="2016")
   abline(h = 0, xpd = FALSE)
   
-  mtext(text = Groups2Rows, side = 1, line = 1, at = apply(Barplot16, 2, mean), adj = 0.5, cex = cex.xaxis)
+  mtext(text = Groups2Rows, side = 1, line = 1.1, at = apply(Barplot16, 2, mean), adj = 0.5, cex = cex.xaxis)
   
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   ## Blank Corner
@@ -3268,14 +3271,14 @@ filenames <- setNames(object = c("South Pen Chignik Proportions Harvest 2014"), 
 
 # If showing proportions (percetages) use blue, otherwise green as "low"
 ProportionColors <- "blue"
-HarvestColors <- "green"
+HarvestColors <- "darkgreen"
 
 #~~~~~~~~~~~~~~~~~~
 # Size Parameters
 Groups <- groups10
 Groups2Rows <- groups10tworows
 cex.lab <- 1.5
-cex.xaxis <- 0.5
+cex.xaxis <- 0.7
 cex.yaxis <- 1.3
 cex.leg <- 1.1
 ci.lwd <- 2.5
@@ -3326,7 +3329,7 @@ text(x = 0.25, y = 0.5, labels = "Number of Fish Harvested", srt = 90, cex = cex
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Harvest Barplot
 par(mar = c(1, 1, 1.5, 1))
-BarplotHarvest <- barplot2(height = SPENCHIG14_HarvestEstimatesStats[,"median"], 
+BarplotHarvest <- barplot2(height = SPENCHIG14_HarvestEstimatesStats[,"median"],
                         beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
                         ci.l = SPENCHIG14_HarvestEstimatesStats[,"5%"], 
                         ci.u = SPENCHIG14_HarvestEstimatesStats[,"95%"], 
@@ -3336,7 +3339,7 @@ legend(legend = TempLegend, x = "topleft", fill = HarvestColors, border = "black
 abline(h = 0, xpd = FALSE)
 
 
-mtext(text = Groups2Rows, side = 1, line = 1, at = BarplotHarvest, adj = 0.5, cex = cex.xaxis)
+mtext(text = Groups2Rows, side = 1, line = 1.1, at = BarplotHarvest, adj = 0.5, cex = cex.xaxis)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Blank Corner
@@ -3357,6 +3360,67 @@ dev.off()
 
 
 
+emf(file = paste("Figures/Final/Blank South Pen Chignik Proportions Harvest 2014.emf", sep = ''), width = 6, height = 5.75, family = "serif", bg = "white")
+
+
+layout(mat = layoutmat, widths = c(0.075, 1), heights = c(1.35, 1.35, 0.15))
+par(mar = rep(0, 4))
+par(family = "times")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Y-axis label
+plot.new()
+par(mar = rep(0, 4))
+text(x = 0.25, y = 0.5, labels = "Percentage of Catch", srt = 90, cex = cex.lab)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Proportions Barplot
+par(mar = c(1, 1, 1.5, 1))
+BarplotProp <- barplot2(height = rep(0, 10), 
+                        beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                        ci.l = rep(0, 10), 
+                        ci.u = rep(0, 10), 
+                        ylim = c(0, 100), col = ProportionColors, yaxt = "n", xaxt = 'n')
+axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+legend(legend = TempLegend, x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="2014")
+abline(h = 0, xpd = FALSE)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Y-axis label
+par(mar = rep(0, 4))
+plot.new()
+text(x = 0.25, y = 0.5, labels = "Number of Fish Harvested", srt = 90, cex = cex.lab)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Harvest Barplot
+par(mar = c(1, 1, 1.5, 1))
+BarplotHarvest <- barplot2(height = rep(0, 10), 
+                           beside = TRUE, plot.ci = TRUE, ci.lwd = ci.lwd,
+                           ci.l = rep(0, 10), 
+                           ci.u = rep(0, 10), 
+                           ylim = c(0, ymax), col = HarvestColors, yaxt = "n", xaxt = 'n')
+axis(side = 2, at = seq(0, ymax, 2000), labels = formatC(x = seq(0, ymax, 2000), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
+legend(legend = TempLegend, x = "topleft", fill = HarvestColors, border = "black", bty = "n", cex = cex.leg, title="2014")
+abline(h = 0, xpd = FALSE)
+
+
+mtext(text = Groups2Rows, side = 1, line = 1.1, at = BarplotHarvest, adj = 0.5, cex = cex.xaxis)
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Blank Corner
+par(mar = rep(0, 4))
+plot.new()
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## x-axis label
+par(mar = rep(0, 4))
+plot.new()
+text(x = 0.5, y = 0.25, labels = "Reporting Group", cex = cex.lab)
+
+dev.off()
 
 
 
@@ -3842,9 +3906,9 @@ ProportionColors <- colorpanel(n = 3, low = "blue", high = "white")
 Groups <- groups10
 Groups2Rows <- groups10tworows
 cex.lab <- 1.5
-cex.xaxis <- 0.5
+cex.xaxis <- 0.7  # 0.5
 cex.yaxis <- 1.3
-cex.leg <- 1.1
+cex.leg <- 1.8
 ci.lwd <- 2.5
 
 
@@ -3885,10 +3949,10 @@ Barplot <- barplot2(height = t(cbind(KMA2014_Annual_Stratified_EstimatesStats[, 
                                  KMA2016_Annual_Stratified_EstimatesStats[, "95%"])) * 100, 
                     ylim = c(0, 100), col = ProportionColors, yaxt = "n", xaxt = 'n')
 axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
-legend(legend = 2014:2016, x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="")
+legend(legend = 2014:2016, x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="June 1-August 5")
 abline(h = 0, xpd = FALSE)
 
-mtext(text = Groups2Rows, side = 1, line = 0.66, at = apply(Barplot, 2, mean), adj = 0.5, cex = cex.xaxis)
+mtext(text = Groups2Rows, side = 1, line = 0.8, at = apply(Barplot, 2, mean), adj = 0.5, cex = cex.xaxis)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Blank Corner
@@ -3932,10 +3996,10 @@ Barplot <- barplot2(height = matrix(data = 0, nrow = 2, ncol = 10),
                     ci.u = matrix(data = 0, nrow = 2, ncol = 10), 
                     ylim = c(0, 100), col = ProportionColors, yaxt = "n", xaxt = 'n')
 axis(side = 2, at = seq(0, 100, 25), labels = formatC(x = seq(0, 100, 25), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
-legend(legend = 2014:2016, x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="")
+legend(legend = 2014:2016, x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="June 1-August 5")
 abline(h = 0, xpd = FALSE)
 
-mtext(text = Groups2Rows, side = 1, line = 0.66, at = apply(Barplot, 2, mean), adj = 0.5, cex = cex.xaxis)
+mtext(text = Groups2Rows, side = 1, line = 0.8, at = apply(Barplot, 2, mean), adj = 0.5, cex = cex.xaxis)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Blank Corner
@@ -3965,16 +4029,16 @@ KMA2016_Annual_Stratified_HarvestEstimatesStats <- dget(file = "Estimates object
 layoutmat <- matrix(data=c(  1, 2,
                              3, 4), nrow = 2, ncol = 2, byrow = TRUE)
 
-ProportionColors <- colorpanel(n = 3, low = "green", high = "white")
+ProportionColors <- c("darkgreen", "green", "white")
 
 #~~~~~~~~~~~~~~~~~~
 # Size Parameters
 Groups <- groups10
 Groups2Rows <- groups10tworows
 cex.lab <- 1.5
-cex.xaxis <- 0.5
+cex.xaxis <- 0.7  # 0.5
 cex.yaxis <- 1.3
-cex.leg <- 1.1
+cex.leg <- 1.8
 ci.lwd <- 2.5
 ymax <- 4000  # max(sapply(list(KMA2014_Annual_Stratified_HarvestEstimatesStats, KMA2015_Annual_Stratified_HarvestEstimatesStats, KMA2016_Annual_Stratified_HarvestEstimatesStats), function(strata) {strata[, "95%"]}))
 
@@ -4016,10 +4080,10 @@ Barplot <- barplot2(height = t(cbind(KMA2014_Annual_Stratified_HarvestEstimatesS
                                    KMA2016_Annual_Stratified_HarvestEstimatesStats[, "95%"])), 
                     ylim = c(0, ymax), col = ProportionColors, yaxt = "n", xaxt = 'n')
 axis(side = 2, at = seq(0, ymax, 1000), labels = formatC(x = seq(0, ymax, 1000), big.mark = "," , digits = 0, format = "f"), cex.axis = cex.yaxis)
-legend(legend = 2014:2016, x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="")
+legend(legend = 2014:2016, x = "topleft", fill = ProportionColors, border = "black", bty = "n", cex = cex.leg, title="June 1-August 5")
 abline(h = 0, xpd = FALSE)
 
-mtext(text = Groups2Rows, side = 1, line = 0.66, at = apply(Barplot, 2, mean), adj = 0.5, cex = cex.xaxis)
+mtext(text = Groups2Rows, side = 1, line = 0.8, at = apply(Barplot, 2, mean), adj = 0.5, cex = cex.xaxis)
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Blank Corner
