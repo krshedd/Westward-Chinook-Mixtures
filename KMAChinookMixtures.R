@@ -3073,6 +3073,102 @@ dev.off()
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Where were stocks caught? ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+KMA2014Strata_EstimatesStats <- dget(file = "Estimates objects/Final/KMA2014Strata_EstimatesStats.txt")
+KMA2015Strata_EstimatesStats <- dget(file = "Estimates objects/Final/KMA2015Strata_EstimatesStats.txt")
+KMA2016Strata_EstimatesStats <- dget(file = "Estimates objects/Final/KMA2016Strata_EstimatesStats.txt")
+
+KMA2014Strata_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2014Strata_HarvestEstimatesStats.txt")
+KMA2015Strata_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2015Strata_HarvestEstimatesStats.txt")
+KMA2016Strata_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2016Strata_HarvestEstimatesStats.txt")
+
+KMA2014_Annual_Stratified_EstimatesStats <- dget(file = "Estimates objects/Final/KMA2014_Annual_Stratified_EstimatesStats.txt")
+KMA2015_Annual_Stratified_EstimatesStats <- dget(file = "Estimates objects/Final/KMA2015_Annual_Stratified_EstimatesStats.txt")
+KMA2016_Annual_Stratified_EstimatesStats <- dget(file = "Estimates objects/Final/KMA2016_Annual_Stratified_EstimatesStats.txt")
+
+KMA2014_Annual_Stratified_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2014_Annual_Stratified_HarvestEstimatesStats.txt")
+KMA2015_Annual_Stratified_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2015_Annual_Stratified_HarvestEstimatesStats.txt")
+KMA2016_Annual_Stratified_HarvestEstimatesStats <- dget(file = "Estimates objects/Final/KMA2016_Annual_Stratified_HarvestEstimatesStats.txt")
+
+
+EstimateStats <- c(KMA2014Strata_EstimatesStats, KMA2015Strata_EstimatesStats, KMA2016Strata_EstimatesStats)
+str(EstimateStats)
+length(EstimateStats)
+
+
+HarvestEstimatesStats <- c(KMA2014Strata_HarvestEstimatesStats, KMA2015Strata_HarvestEstimatesStats, KMA2016Strata_HarvestEstimatesStats)
+
+StrataMedians <- sapply(groups10, function(RG) {
+  sapply(EstimateStats, function(strata) {
+    if(RG %in% rownames(strata)) {
+      round(strata[RG, "median"], 3)
+    } else {
+      round(strata["Coastal West Alaska / Yukon", "median"], 3)
+    }
+  })
+})
+
+StrataMedians <- StrataMedians[-which(rownames(StrataMedians) == "KSPENCHIG14"), ]
+
+HarvestMedians <- sapply(groups10, function(RG) {
+  sapply(HarvestEstimatesStats, function(strata) {
+    if(RG %in% rownames(strata)) {
+      round(strata[RG, "median"], 3)
+    } else {
+      round(strata["Coastal West Alaska / Yukon", "median"], 3)
+    }
+  })
+})
+
+
+str(StrataMedians) ;str(HarvestMedians)
+table(rownames(StrataMedians) == rownames(HarvestMedians))
+
+# If >= 5% of mixture, where?
+sapply(groups10, function(RG) {which(StrataMedians[, RG] >= 0.05)})
+
+# Plot histogram
+invisible(sapply(groups10, function(RG) {
+  hist(StrataMedians[, RG], col = 8, main = RG, ylab = "Proportion", xlim = c(0, 1), breaks = seq(0, 1, 0.01))
+  abline(v = 0.05, lwd = 3, col = 2)}))
+
+# If >= 5% of mixtures, which ones and how much?
+sapply(groups10, function(RG) {
+  list("n" = sum(StrataMedians[, RG] >= 0.05),
+       "Strata" = rbind("Percent" = StrataMedians[StrataMedians[, RG] >= 0.05, RG] * 100,
+                        "Harvest" = HarvestMedians[StrataMedians[, RG] >= 0.05, RG]),
+       "Annual" = round(rbind("2014" = c(KMA2014_Annual_Stratified_EstimatesStats[RG, "median"] * 100, KMA2014_Annual_Stratified_HarvestEstimatesStats[RG, "median"]),
+                              "2015" = c(KMA2015_Annual_Stratified_EstimatesStats[RG, "median"] * 100, KMA2015_Annual_Stratified_HarvestEstimatesStats[RG, "median"]),
+                              "2016" = c(KMA2016_Annual_Stratified_EstimatesStats[RG, "median"] * 100, KMA2016_Annual_Stratified_HarvestEstimatesStats[RG, "median"])), 1))}, simplify = FALSE )
+
+apply(StrataMedians, 2, function(x) {x>=0.05})
+
+
+
+
+z <- cbind(Annual2014_Stratified_HarvestEstimates,
+           Annual2015_Stratified_HarvestEstimates,
+           Annual2016_Stratified_HarvestEstimates)
+str(z)
+sum(z["Prince William Sound", c(5:6, 11:12, 17:18)]) / sum(z["Prince William Sound", ])
+
+
+
+# Sport
+
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Sport Harvest 2014-2016/Mixtures")
+
+KMARS14_EstimatesStats <- dget(file = "Estimates objects/KMARS14_EstimatesStats.txt")
+KMARS15_EstimatesStats <- dget(file = "Estimates objects/KMARS15_EstimatesStats.txt")
+KMARS16_EstimatesStats <- dget(file = "Estimates objects/KMARS16_80K_EstimatesStats.txt")
+
+setwd("V:/Analysis/4_Westward/Chinook/CSRI Westward Commercial Harvest 2014-2016/Mixtures")
+
+SportMedians <- round(cbind("2014" = KMARS14_EstimatesStats[[1]][, "median"], "2015" = KMARS15_EstimatesStats[[1]][, "median"], "2016" = KMARS16_EstimatesStats[[1]][, "median"]) * 100, 1)
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #### Plot Harvests for KMA Mixtures ####
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
