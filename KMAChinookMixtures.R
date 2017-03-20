@@ -4270,3 +4270,22 @@ table(groups10[groupvec10] == groups10[groupvec10[maporder]])  # it doesn't
 # Add colors to GIS map
 cbind(groups10, colors10)
 t(rbind(groups10, col2rgb(colors10)))
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#### Break out Middle and Upper Yukon for KSPENCHIG14 ####
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+KMA211Pops
+popnames211
+
+groupvec10; groups10
+groupvec15; Groups15
+
+KSPENCHIG14_15RG_Estimates <- CustomCombineBAYESOutput.GCL(
+  groupvec = groupvec15, groupnames = Groups15, 
+  maindir = "BAYES/Output", 
+  mixvec = "KSPENCHIG14", prior = "",  
+  ext = "BOT", nchains = 5, burn = 0.5, alpha = 0.1, PosteriorOutput = TRUE); beep(4)
+
+
+KSPENCHIG14_15RG_Estimates$Stats
